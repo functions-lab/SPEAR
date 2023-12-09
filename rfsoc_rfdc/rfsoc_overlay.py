@@ -13,3 +13,7 @@ class RFSoCOverlay(Overlay):
 
         # Create Overlay
         super().__init__(bitfile_name, **kwargs)
+
+        # Print out all IPs in bit stream file
+        for i in self.ip_dict:
+            print(i)
