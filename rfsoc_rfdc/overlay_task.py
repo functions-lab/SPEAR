@@ -18,7 +18,7 @@ from pynq import allocate
 import os
 import time
 from pynq.lib import AxiGPIO
-# from pynq import DefaultIP
+from pynq import DefaultIP
 
 
 class OverlayTask(ABC):
@@ -162,7 +162,7 @@ class RfdcTask(OverlayTask):
             'CoarseMixFreq': xrfdc.COARSE_MIX_BYPASS,
             'EventSource': xrfdc.EVNT_SRC_TILE,
             'FineMixerScale': xrfdc.MIXER_SCALE_0P7,
-            'Freq': 0,
+            'Freq': 3,
             'MixerMode': xrfdc.MIXER_MODE_C2R,
             'MixerType': xrfdc.MIXER_TYPE_FINE,
             'PhaseOffset': 0.0
