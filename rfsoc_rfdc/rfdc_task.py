@@ -28,8 +28,7 @@ class RfdcTask(OverlayTask):
                 tile.SetupFIFO(True)
                 # Check DAC tile enable status
                 if status['TileState'] != 15:
-                    print("DAC IsEnabled: ", status['IsEnabled'], "TileState: ", status['TileState'], "BlockStatusMask: ",
-                          status['BlockStatusMask'], "PowerUpState: ", status['PowerUpState'], "PLLState: ", status['PLLState'])
+                    print(status)
                     raise Exception(
                         f"DAC Tile {tile_idx} is not fully powered up!")
 
@@ -60,8 +59,7 @@ class RfdcTask(OverlayTask):
                 tile.SetupFIFO(True)
                 # Check ADC tile enable status
                 if status['TileState'] != 15:
-                    print("ADC IsEnabled: ", status['IsEnabled'], "TileState: ", status['TileState'], "BlockStatusMask: ",
-                          status['BlockStatusMask'], "PowerUpState: ", status['PowerUpState'], "PLLState: ", status['PLLState'])
+                    print(status)
                     raise Exception(
                         f"ADC Tile {tile_idx} is not fully powered up!")
 
