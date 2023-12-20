@@ -31,7 +31,8 @@ class RfdcTask(OverlayTask):
                     print(status)
                     raise Exception(
                         f"DAC Tile {tile_idx} is not fully powered up!")
-
+                else:
+                    print(f"DAC Tile {tile_idx} is fully powered up!")
                 # Configure DAC in a tile
                 block_mask = 0x1
                 for dac in tile.blocks:
@@ -62,7 +63,8 @@ class RfdcTask(OverlayTask):
                     print(status)
                     raise Exception(
                         f"ADC Tile {tile_idx} is not fully powered up!")
-
+                else:
+                    print(f"ADC Tile {tile_idx} is fully powered up!")
                 # Configure DAC in a tile
                 block_mask = 0x1
                 for adc in tile.blocks:
