@@ -1,71 +1,89 @@
-from enum import Enum, auto
+# Power-on Sequence Steps from page 163 of PG269: Zynq UltraScale+ RFSoC RF Data Converter v2.4 Gen 1/2/3
 
-TileState = Enum('TileState', {'POWERED_DOWN': 0, 'POWERED_UP': 15})
-EnableState = Enum('EnableState', {'DISABLED': 0, 'ENABLED': 1})
-PowerUpState = Enum('PowerUpState', {'STATE_A': 0,  'STATE_B': 1})
-PLLState = Enum('PLLState', {'STATE_A': 0,  'STATE_B': 1})
-BlockStatusMask = Enum('getBlockStatusMask', {'DAC1': 2,  'DAC01': 3,  'DAC12': 6,  'DAC012': 7, 'DAC123': 14, 'DAC0123': 15})
+class RfDcType:
 
-class TileStatus:
-    def __init__(self, status):
-        self.dict = status
+    POWER_ON_SEQUENCE_STEPS = [
+        {
+            "Sequence Number": 0,
+            "State": "[Device Power-up and Configuration]",
+            "Description": "[The configuration parameters set in the Vivado® IDE are programmed into the converters. The state machine then waits for the external supplies to be powered up. In hardware this can take up to 25 ms. However this is reduced to 200 µs in behavioral simulations.]"
+        },
+        {
+            "Sequence Number": 1,
+            "State": "[Device Power-up and Configuration]",
+            "Description": "[The configuration parameters set in the Vivado® IDE are programmed into the converters. The state machine then waits for the external supplies to be powered up. In hardware this can take up to 25 ms. However this is reduced to 200 µs in behavioral simulations.]"
+        },
+        {
+            "Sequence Number": 2,
+            "State": "[Device Power-up and Configuration]",
+            "Description": "[The configuration parameters set in the Vivado® IDE are programmed into the converters. The state machine then waits for the external supplies to be powered up. In hardware this can take up to 25 ms. However this is reduced to 200 µs in behavioral simulations.]"
+        },
+        {
+            "Sequence Number": 3,
+            "State": "[Power Supply Adjustment]",
+            "Description": "[The configuration settings are propagated to the analog sections of the converters. In addition the regulators, bias settings in the RF-DAC, and the common-mode output buffer in the RF-ADC are enabled.]"
+        },
+        {
+            "Sequence Number": 4,
+            "State": "[Power Supply Adjustment]",
+            "Description": "[The configuration settings are propagated to the analog sections of the converters. In addition the regulators, bias settings in the RF-DAC, and the common-mode output buffer in the RF-ADC are enabled.]"
+        },
+        {
+            "Sequence Number": 5,
+            "State": "[Power Supply Adjustment]",
+            "Description": "[The configuration settings are propagated to the analog sections of the converters. In addition the regulators, bias settings in the RF-DAC, and the common-mode output buffer in the RF-ADC are enabled.]"
+        },
+        {
+            "Sequence Number": 6,
+            "State": "[Clock Configuration]",
+            "Description": "[The state machine first detects the presence of a good clock into the converter. Then, if the PLL is enabled, it checks for PLL lock. The clocks are then released to the digital section of the converters.]"
+        },
+        {
+            "Sequence Number": 7,
+            "State": "[Clock Configuration]",
+            "Description": "[The state machine first detects the presence of a good clock into the converter. Then, if the PLL is enabled, it checks for PLL lock. The clocks are then released to the digital section of the converters.]"
+        },
+        {
+            "Sequence Number": 8,
+            "State": "[Clock Configuration]",
+            "Description": "[The state machine first detects the presence of a good clock into the converter. Then, if the PLL is enabled, it checks for PLL lock. The clocks are then released to the digital section of the converters.]"
+        },
+        {
+            "Sequence Number": 9,
+            "State": "[Clock Configuration]",
+            "Description": "[The state machine first detects the presence of a good clock into the converter. Then, if the PLL is enabled, it checks for PLL lock. The clocks are then released to the digital section of the converters.]"
+        },
+        {
+            "Sequence Number": 10,
+            "State": "[Clock Configuration]",
+            "Description": "[The state machine first detects the presence of a good clock into the converter. Then, if the PLL is enabled, it checks for PLL lock. The clocks are then released to the digital section of the converters.]"
+        },
+        {
+            "Sequence Number": 11,
+            "State": "[Converter Calibration (ADC only)]",
+            "Description": "[Calibration is carried out in the RF-ADC. In hardware this can take approximately 10 ms, however this is reduced to 60 µs in behavioral simulations.]"
+        },
+        {
+            "Sequence Number": 12,
+            "State": "[Converter Calibration (ADC only)]",
+            "Description": "[Calibration is carried out in the RF-ADC. In hardware this can take approximately 10 ms, however this is reduced to 60 µs in behavioral simulations.]"
+        },
+        {
+            "Sequence Number": 13,
+            "State": "[Converter Calibration (ADC only)]",
+            "Description": "[Calibration is carried out in the RF-ADC. In hardware this can take approximately 10 ms, however this is reduced to 60 µs in behavioral simulations.]"
+        },
+        {
+            "Sequence Number": 14,
+            "State": "[Wait for deassertion of AXI4-Stream reset]",
+            "Description": "[The AXI4-Stream reset for the tile should be asserted until the AXI4-Stream clocks are stable. For example, if the clock is provided by a MMCM, the reset should be held until it has achieved lock. The state machine waits in this state until the reset is deasserted.]"
+        },
+        {
+            "Sequence Number": 15,
+            "State": "[Done]",
+            "Description": "[The state machine has completed the power-up sequence.]"
+        }
+    ]
 
-    def getEnbStatus(self):
-        return EnableState(self.dict['IsEnabled'])
-
-    def getTileState(self):
-        return TileState(self.dict['TileState'])
-
-    def getBlockStatusMask(self):
-        return BlockStatusMask(self.dict['BlockStatusMask'])
-
-    def getPowerUpState(self):
-        return PowerUpState(self.dict['PowerUpState'])
-
-    def getPLLState(self):
-        return PLLState(self.dict['PLLState'])
-
-    def __str__(self):
-        return str(self.dict)
-
-class CoarseMixFreq(Enum):
-    OFF = 0x0
-    SAMPLE_FREQ_BY_TWO = 0x2
-    SAMPLE_FREQ_BY_FOUR = 0x4
-    MIN_SAMPLE_FREQ_BY_FOUR = 0x8
-    BYPASS = 0x10  # xrfdc.COARSE_MIX_BYPASS
-
-class EventSource(Enum):
-    IMMEDIATE = 0x00000000
-    SLICE = 0x00000001
-    TILE = 0x00000002  # xrfdc.EVNT_SRC_TILE
-    SYSREF = 0x00000003
-    MARKER = 0x00000004
-    PL = 0x00000005
-
-class FineMixerScale(Enum):
-    AUTO = 0x0
-    SCALE_1P0 = 0x1  # xrfdc.MIXER_SCALE_1P0
-    SCALE_0P7 = 0x2
-
-class MixerMode(Enum):
-    OFF = 0x0
-    C2C = 0x1
-    C2R = 0x2  # xrfdc.MIXER_MODE_R2C
-    R2C = 0x3
-    R2R = 0x4
-
-class MixerType(Enum):
-    COARSE = 0x1
-    FINE = 0x2  # xrfdc.MIXER_TYPE_FINE
-    OFF = 0x3
-
-class MixerSettings:
-    def __init__(self, coarse_mix_freq, event_source, fine_mixer_scale, freq, mixer_mode, mixer_type, phase_offset):
-        self.coarse_mix_freq = coarse_mix_freq
-        self.event_source = event_source
-        self.fine_mixer_scale = fine_mixer_scale
-        self.freq = freq
-        self.mixer_mode = mixer_mode
-        self.mixer_type = mixer_type
-        self.phase_offset = phase_offset
+    def __init__(self):
+        pass

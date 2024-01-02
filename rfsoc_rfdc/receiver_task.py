@@ -5,7 +5,7 @@ from .recv_plotter import RecvDataPlotter
 import matplotlib.pyplot as plt
 
 from pynq import allocate
-
+import time
 from pynq.lib import AxiGPIO
 
 

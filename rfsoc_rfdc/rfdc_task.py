@@ -1,8 +1,12 @@
+import logging
 import xrfdc
-import os
-import time
 from .clocks import set_custom_lmclks
 from .overlay_task import OverlayTask
+from .rfdc_type import RfDcType
+
+# Basic logging configuration
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 
 class RfdcTask(OverlayTask):
@@ -12,13 +16,12 @@ class RfdcTask(OverlayTask):
 
     def run(self):
         # Get board name
-        board_name = os.environ['BOARD']
+        # board_name = os.environ['BOARD']
 
         # Start up LMX clock
         set_custom_lmclks()
-        time.sleep(3)
 
-        # Configure DACs
+        # Configure all DACs
         for tile_idx, tile in enumerate(self.rf.dac_tiles):
             status = self.rf.IPStatus['DACTileStatus'][tile_idx]
 
@@ -27,15 +30,19 @@ class RfdcTask(OverlayTask):
                 tile.DynamicPLLConfig(1, 409.6, 1024)
                 tile.SetupFIFO(True)
                 # Check DAC tile enable status
-                if status['TileState'] != 15:
-                    print(status)
-                    raise Exception(
-                        f"DAC Tile {tile_idx} is not fully powered up!")
-                else:
-                    print(f"DAC Tile {tile_idx} is fully powered up!")
-                # Configure DAC in a tile
+                for step in RfDcType.POWER_ON_SEQUENCE_STEPS:
+                    if status['TileState'] == step['Sequence Number']:
+                        if step['Sequence Number'] != 15:
+                            err_msg = f"DAC Tile {tile_idx} is NOT fully powered up! Stuck at Step: {step['State']} Description: {step['Description']}"
+                            raise Exception(err_msg)
+                        else:
+                            logging.info(
+                                f"DAC Tile {tile_idx} is fully powered up!")
+                        break
+                # Configure each DAC within a tile
                 block_mask = 0x1
                 for dac in tile.blocks:
+                    block_id = (block_mask & -block_mask).bit_length() - 1
                     if status['BlockStatusMask'] & block_mask != 0:
                         dac.NyquistZone = 1
                         dac.MixerSettings = {
@@ -48,9 +55,12 @@ class RfdcTask(OverlayTask):
                             'PhaseOffset': 0.0
                         }
                         dac.UpdateEvent(xrfdc.EVENT_MIXER)
+                        logging.info(f"DAC block {block_id} is enabled!")
+                    else:
+                        logging.info(f"DAC block {block_id} is NOT enabled!")
                     block_mask = block_mask << 1
 
-        # Configure ADCs
+        # Configure all ADCs
         for tile_idx, tile in enumerate(self.rf.adc_tiles):
             status = self.rf.IPStatus['ADCTileStatus'][tile_idx]
 
@@ -59,15 +69,19 @@ class RfdcTask(OverlayTask):
                 tile.DynamicPLLConfig(1, 409.6, 1024)
                 tile.SetupFIFO(True)
                 # Check ADC tile enable status
-                if status['TileState'] != 15:
-                    print(status)
-                    raise Exception(
-                        f"ADC Tile {tile_idx} is not fully powered up!")
-                else:
-                    print(f"ADC Tile {tile_idx} is fully powered up!")
-                # Configure DAC in a tile
+                for step in RfDcType.POWER_ON_SEQUENCE_STEPS:
+                    if status['TileState'] == step['Sequence Number']:
+                        if step['Sequence Number'] != 15:
+                            err_msg = f"ADC Tile {tile_idx} is NOT fully powered up! Stuck at Step: {step['State']} Description: {step['Description']}"
+                            raise Exception(err_msg)
+                        else:
+                            logging.info(
+                                f"ADC Tile {tile_idx} is fully powered up!")
+                        break
+                # Configure each ADC within a tile
                 block_mask = 0x1
                 for adc in tile.blocks:
+                    block_id = (block_mask & -block_mask).bit_length() - 1
                     if status['BlockStatusMask'] & block_mask != 0:
                         adc.NyquistZone = 1
                         adc.MixerSettings = {
@@ -80,4 +94,7 @@ class RfdcTask(OverlayTask):
                             'PhaseOffset': 0.0
                         }
                         adc.UpdateEvent(xrfdc.EVENT_MIXER)
+                        logging.info(f"ADC block {block_id} is enabled!")
+                    else:
+                        logging.info(f"ADC block {block_id} is NOT enabled!")
                     block_mask = block_mask << 1
