@@ -42,7 +42,8 @@ class RfdcTask(OverlayTask):
                 # Configure each DAC within a tile
                 block_mask = 0x1
                 for dac in tile.blocks:
-                    block_id = (block_mask & -block_mask).bit_length() - 1
+                    block_id = (block_mask & -
+                                block_mask).bit_length() - 1  # ctz
                     if status['BlockStatusMask'] & block_mask != 0:
                         dac.NyquistZone = 1
                         dac.MixerSettings = {
@@ -81,7 +82,8 @@ class RfdcTask(OverlayTask):
                 # Configure each ADC within a tile
                 block_mask = 0x1
                 for adc in tile.blocks:
-                    block_id = (block_mask & -block_mask).bit_length() - 1
+                    block_id = (block_mask & -
+                                block_mask).bit_length() - 1  # ctz
                     if status['BlockStatusMask'] & block_mask != 0:
                         adc.NyquistZone = 1
                         adc.MixerSettings = {
