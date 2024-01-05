@@ -3,12 +3,26 @@ from pynq import Overlay
 import os
 import re
 
-RFDC_INSTANCE_NAME = 'usp_rf_data_converter'
-
 
 class RFSoCOverlay(Overlay):
+    """
+    Represents an RFSoC overlay.
+
+    This class extends the `Overlay` class and provides additional functionality specific to RFSoC devices.
+
+    Args:
+        path_to_bitstream (str): Path to the bitstream file (.bit). If not provided, the default bitstream file in the current directory will be used.
+        **kwargs: Additional keyword arguments to be passed to the `Overlay` class constructor.
+    """
 
     def __init__(self, path_to_bitstream=None, **kwargs):
+        """
+        Initializes the RFSoCOverlay object.
+
+        Args:
+            path_to_bitstream (str): Path to the bitstream file (.bit). If not provided, the default bitstream file in the current directory will be used.
+            **kwargs: Additional keyword arguments to be passed to the `Overlay` class constructor.
+        """
 
         # Generate default bitfile name
         if path_to_bitstream is None:
@@ -24,6 +38,19 @@ class RFSoCOverlay(Overlay):
             print(i)
 
     def _find_matching_files(self, directory):
+        """
+        Finds the matching bitstream (.bit) and hardware handoff files (.hwh) in the given directory.
+
+        Args:
+            directory (str): Path to the directory containing the files.
+
+        Returns:
+            tuple: A tuple containing the names of the matching bitstream and hardware handoff files.
+
+        Raises:
+            FileNotFoundError: If no matching bitstream files are found or if a corresponding hardware handoff file is missing.
+        """
+
         # Get all files in the directory and sort them in increasing order
         all_files = sorted(os.listdir(directory))
 

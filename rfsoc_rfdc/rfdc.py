@@ -1,18 +1,28 @@
 import logging
 import xrfdc
+import numpy as np
 
 from xrfdc import RFdcDacTile, RFdcAdcTile
 
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-
 
 class RfDataConverterStatus:
+    """
+    Class for fetching the status of RF Data Converter tiles (both DAC and ADC).
 
+    Attributes:
+        dac_tiles_status: Status of DAC tiles.
+        adc_tiles_status: Status of ADC tiles.
+    """
     DAC_TILE_STATUS_KEY = 'DACTileStatus'
     ADC_TILE_STATUS_KEY = 'ADCTileStatus'
 
     def __init__(self, overlay):
+        """
+        Initialize the RfDataConverterStatus instance with the overlay containing RF data converter.
+
+        Args:
+            overlay: The overlay on the hardware that contains the RF data converter.
+        """
         self.dac_tiles_status = overlay.usp_rf_data_converter.IPStatus[self.DAC_TILE_STATUS_KEY]
         self.adc_tiles_status = overlay.usp_rf_data_converter.IPStatus[self.ADC_TILE_STATUS_KEY]
 
@@ -48,7 +58,24 @@ class RfDataConverterStatus:
 
 
 class RfDataConverterDACTile(RFdcDacTile):
+    """
+    Class representing a DAC tile in the RF Data Converter.
+
+    Inherits from RFdcDacTile.
+
+    Attributes:
+        tile_id: The ID of the DAC tile.
+        tile_phy_id: The physical ID of the DAC tile.
+    """
+
     def __init__(self, tile_id, rfdc_dac_tile=None):
+        """
+        Initialize a DAC tile with its ID and optionally an existing RFdcDacTile instance.
+
+        Args:
+            tile_id: The ID of the DAC tile.
+            rfdc_dac_tile: An existing RFdcDacTile instance, if available.
+        """
         if rfdc_dac_tile is not None:
             # The __dict__ of an instance holds all instance attributes, the above merely copies over all of those attributes to the new instance.
             self.__dict__.update(rfdc_dac_tile.__dict__)
@@ -65,7 +92,24 @@ class RfDataConverterDACTile(RFdcDacTile):
 
 
 class RfDataConverterADCTile(RFdcAdcTile):
+    """
+    Class representing an ADC tile in the RF Data Converter.
+
+    Inherits from RFdcAdcTile.
+
+    Attributes:
+        tile_id: The ID of the ADC tile.
+        tile_read_id: The read ID of the ADC tile.
+    """
+
     def __init__(self, tile_id, rfdc_adc_tile=None):
+        """
+        Initialize an ADC tile with its ID and optionally an existing RFdcAdcTile instance.
+
+        Args:
+            tile_id: The ID of the ADC tile.
+            rfdc_adc_tile: An existing RFdcAdcTile instance, if available.
+        """
         if rfdc_adc_tile is not None:
             self.__dict__.update(rfdc_adc_tile.__dict__)
         self._tile_id = tile_id
@@ -81,7 +125,23 @@ class RfDataConverterADCTile(RFdcAdcTile):
 
 
 class RfDataConverter:
+    """
+    Main class for controlling the RF Data Converter, including both DAC and ADC tiles.
+
+    Attributes:
+        rfdc: The RF data converter overlay instance.
+        rfdc_status: Instance of RfDataConverterStatus for status monitoring.
+        dac_tiles: List of RfDataConverterDACTile.
+        adc_tiles: List of RfDataConverterADCTile.
+    """
+
     def __init__(self, overlay):
+        """
+        Initialize the RF Data Converter with the given overlay.
+
+        Args:
+            overlay: The overlay on the hardware that contains the RF data converter.
+        """
         self.rfdc = overlay.usp_rf_data_converter
         self.rfdc_status = RfDataConverterStatus(overlay)
         self.dac_tiles = [RfDataConverterDACTile(
@@ -132,6 +192,7 @@ class RfDataConverter:
             self.adc_tiles, adc_pll_settings, adc_mixer_settings, update_event)
 
     def shutdown_tiles(self, tiles):
+        """Safely shutdown all tiles."""
         for tile in tiles:
             tile.Shutdown()
         logging.info(f"All tiles has been safely shutdown!")
@@ -217,11 +278,12 @@ class RfDataConverter:
         block.MixerSettings = mixer_settings
         block.UpdateEvent(event_settings)
 
-# Power-on Sequence Steps from page 163 of PG269: Zynq UltraScale+ RFSoC RF Data Converter v2.4 Gen 1/2/3
-
 
 class RfDataConverterType:
 
+    DATA_PATH_DTYPE = np.int16
+
+    # Power-on Sequence Steps from page 163 of PG269: Zynq UltraScale+ RFSoC RF Data Converter v2.4 Gen 1/2/3
     POWER_ON_SEQUENCE_STEPS = [
         {
             "Sequence Number": 0,

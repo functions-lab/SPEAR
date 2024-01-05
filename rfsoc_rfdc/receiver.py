@@ -1,37 +1,37 @@
-from pynq import allocate, DefaultIP
-import numpy as np
-from .async_radio import AsyncRadioRx
+# from pynq import allocate, DefaultIP
+# import numpy as np
+# from .async_radio import AsyncRadioRx
 
 
-class Receiver():
-    def __init__(self, rx_dma, buff_size=100):
-        """Create a Receiver object that controls the receiver
-        and corresonding AXI DMA for data movement between PS and PL."""
-        """Member initialisation"""
-        super().__init__()
-        # Create AXI DMA object
-        self.rx_dma = rx_dma
-        self.rx_dma.set_up_rx_channel()
-        # Receive buffer size
-        self.buff_size = buff_size
-        # AXI DMA Buffer initialisation
-        self._rx_buff = allocate(shape=(self.buff_size), dtype=np.int16)
-        # Create asynchronous radio receiver
-        self.monitor = AsyncRadioRx(irq=self.rx_dma,
-                                    irq_callback=self._transfer, callback=[])
+# class Receiver():
+#     def __init__(self, rx_dma, buff_size=100):
+#         """Create a Receiver object that controls the receiver
+#         and corresonding AXI DMA for data movement between PS and PL."""
+#         """Member initialisation"""
+#         super().__init__()
+#         # Create AXI DMA object
+#         self.rx_dma = rx_dma
+#         self.rx_dma.set_up_rx_channel()
+#         # Receive buffer size
+#         self.buff_size = buff_size
+#         # AXI DMA Buffer initialisation
+#         self._rx_buff = allocate(shape=(self.buff_size), dtype=np.int16)
+#         # Create asynchronous radio receiver
+#         self.monitor = AsyncRadioRx(irq=self.rx_dma,
+#                                     irq_callback=self._transfer, callback=[])
 
-    def _transfer(self):
-        """Perform sync data transfer"""
-        # Create new recv buffer for message
-        self._rx_buff.freebuffer()
-        self._rx_buff = allocate(shape=(self.buff_size,), dtype=np.int16)
-        """Receive the message"""
-        self.rx_dma.recvchannel.transfer(self._rx_buff)
-        self.rx_dma.recvchannel.wait()  # blocking wait
+#     def _transfer(self):
+#         """Perform sync data transfer"""
+#         # Create new recv buffer for message
+#         self._rx_buff.freebuffer()
+#         self._rx_buff = allocate(shape=(self.buff_size,), dtype=np.int16)
+#         """Receive the message"""
+#         self.rx_dma.recvchannel.transfer(self._rx_buff)
+#         self.rx_dma.recvchannel.wait()  # blocking wait
 
-    def _recv_callback(self):
-        for h in self._rx_buff:
-            print(hex(h))
+#     def _recv_callback(self):
+#         for h in self._rx_buff:
+#             print(hex(h))
 
 # class ReceiverCore(DefaultIP):
 #     """Driver for Receiver's core logic IP

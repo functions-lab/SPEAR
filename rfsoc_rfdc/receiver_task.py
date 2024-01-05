@@ -1,12 +1,10 @@
-import numpy as np
-
 from .overlay_task import OverlayTask
 from .recv_plotter import RecvDataPlotter
 import matplotlib.pyplot as plt
 
+from .rfdc import RfDataConverterType
 from pynq import allocate
 import time
-from pynq.lib import AxiGPIO
 
 
 class ReceiverTask(OverlayTask):
@@ -14,7 +12,8 @@ class ReceiverTask(OverlayTask):
         super().__init__(overlay, name="ReceiverTask")
         self.rx_dma = self.ol.axi_dma_adc2
         self.buffer_size = buffer_size
-        self.rx_buff = allocate(shape=(self.buffer_size,), dtype=np.uint16)
+        self.rx_buff = allocate(shape=(self.buffer_size,),
+                                dtype=RfDataConverterType.DATA_PATH_DTYPE)
         self.plotter = RecvDataPlotter(num_of_pts_plotted)
 
     def run(self):
