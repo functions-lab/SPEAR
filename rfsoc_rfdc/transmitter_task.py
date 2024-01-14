@@ -11,15 +11,6 @@ class TransmitterTask(OverlayTask):
 
     This class is responsible for performing data copy and multi-channel transmission
     using the specified hardware IPs.
-
-    Attributes:
-        mode (str): The operating mode of the transmitter task. Can be "repeater" or "real_time".
-        dma_ips (list): A list of hardware IPs for data transfer.
-        fifo_count_ips (list): A list of hardware IPs for FIFO count.
-        fifo_status_ips (list): A list of hardware IPs for FIFO status.
-        tx_channels (list): A list of Tx channels for data transfer.
-        i_data (numpy.ndarray): The I data for generating IQ samples.
-        q_data (numpy.ndarray): The Q data for generating IQ samples.
     """
 
     def __init__(self, overlay):
@@ -27,13 +18,14 @@ class TransmitterTask(OverlayTask):
         # Operating mode
         self.mode = "repeater"  # or "real_time"
         # Hardware IPs
-        self.dma_ips = [
+        self.t230_dma_ips = [
             self.ol.dac_datapath.t230_dac0.axi_dma,
             self.ol.dac_datapath.t230_dac1.axi_dma,
             self.ol.dac_datapath.t230_dac2.axi_dma,
             self.ol.dac_datapath.t230_dac3.axi_dma
         ]
-        self.fifo_count_ips = [
+
+        self.t230_fifo_count_ips = [
             AxiGPIO(
                 self.ol.ip_dict['dac_datapath/t230_dac0/fifo_count']).channel1,
             AxiGPIO(
@@ -43,7 +35,8 @@ class TransmitterTask(OverlayTask):
             AxiGPIO(
                 self.ol.ip_dict['dac_datapath/t230_dac3/fifo_count']).channel1
         ]
-        self.fifo_status_ips = [
+
+        self.t230_fifo_status_ips = [
             AxiGPIO(
                 self.ol.ip_dict['dac_datapath/t230_dac0/fifo_full']).channel1,
             AxiGPIO(
@@ -54,14 +47,15 @@ class TransmitterTask(OverlayTask):
                 self.ol.ip_dict['dac_datapath/t230_dac3/fifo_full']).channel1
         ]
         # Initialize Tx channels
-        self.tx_channels = []
-        for ch_idx, _ in enumerate(self.dma_ips):
-            self.tx_channels.append(
+        self.t230_tx_channels = []
+
+        for ch_idx, _ in enumerate(self.t230_dma_ips):
+            self.t230_tx_channels.append(
                 Iq2RealTxChannel(
                     channel_id=ch_idx,
-                    dma_ip=self.dma_ips[ch_idx],
-                    fifo_count_ip=self.fifo_count_ips[ch_idx],
-                    fifo_status_ip=self.fifo_status_ips[ch_idx]
+                    dma_ip=self.t230_dma_ips[ch_idx],
+                    fifo_count_ip=self.t230_fifo_count_ips[ch_idx],
+                    fifo_status_ip=self.t230_fifo_status_ips[ch_idx]
                 )
             )
         # Generate iq samples
@@ -82,19 +76,21 @@ class TransmitterTask(OverlayTask):
         """
 
         # Perform data copy
-        for tx_ch in self.tx_channels:
+        for tx_ch in self.t230_tx_channels:
             tx_ch.data_copy(self.q_data, self.i_data)
 
         # Perform multi-channel transmission
         if self.mode == "repeater":
             while True:
-                # self.tx_channels[0].transfer()
-                # self.tx_channels[1].transfer()
-                # self.tx_channels[0].wait()
-                # self.tx_channels[1].wait()
-                for tx_ch in self.tx_channels:
-                    tx_ch.transfer()
-                for tx_ch in self.tx_channels:
-                    tx_ch.wait()
+                self.t230_tx_channels[0].transfer()
+                # self.t230_tx_channels[1].transfer()
+                # self.t230_tx_channels[2].transfer()
+                # self.t230_tx_channels[3].transfer()
+
+                self.t230_tx_channels[0].wait()
+                # self.t230_tx_channels[1].wait()
+                # self.t230_tx_channels[2].wait()
+                # self.t230_tx_channels[3].wait()
+
         else:
             raise ValueError(f"Unrecognized mode: {self.mode}")

@@ -35,7 +35,7 @@ class Iq2RealTxChannel:
         self.tx_dma = TxDmaMonitor(dma_ip=dma_ip,
                                    fifo_count_ip=fifo_count_ip, fifo_status_ip=fifo_status_ip)
         self.buff_thres = 1000
-        self.fifo_thres = 1000
+        self.fifo_thres = 512
         self.warning_cnt = 0
 
     def data_copy(self, i_buff, q_buff):
@@ -84,7 +84,7 @@ class Iq2RealTxChannel:
         # Warning for low FIFO count
         if fifo_count < self.fifo_thres:
             self.warning_cnt += 1
-        if self.warning_cnt > 100:
+        if self.warning_cnt > 1000:
             self.warning_cnt = 0
             logging.info(
                 f"[Channel {self.channel_id}] Warning: Tx FIFO count {fifo_count} is less than {self.fifo_thres}. DMA transfer is too slow!")

@@ -14,11 +14,14 @@ class DmaMonitor(ABC):
         """
         Constructs all the necessary attributes for the PynqDMA object.
         """
-        self.dma = dma_ip  # DMA IP core instance
-        self.fifo_count = fifo_count_ip  # FIFO count IP core instance
+        # DMA IP core instance
+        self.dma = dma_ip
+        # Configure FIFO count IP core
+        self.fifo_count = fifo_count_ip
         self.fifo_count.setdirection("in")
         self.fifo_count.setlength(32)
-        self.fifo_status = fifo_status_ip  # FIFO status IP core instance
+        # Configure FIFO status IP core instance
+        self.fifo_status = fifo_status_ip
         self.fifo_status.setdirection("in")
         self.fifo_status.setlength(1)
 
@@ -33,6 +36,12 @@ class DmaMonitor(ABC):
         Returns whether the FIFO is full or empty.
         """
         return self.fifo_status.read()
+
+    def get_debug_info(self):
+        """
+        Returns the debug information of the DMA.
+        """
+        return self.dma.register_map
 
     @abstractmethod
     def transfer(self, buffer):

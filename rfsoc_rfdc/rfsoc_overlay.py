@@ -3,6 +3,9 @@ from pynq import Overlay
 import os
 import re
 
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
 
 class RFSoCOverlay(Overlay):
     """

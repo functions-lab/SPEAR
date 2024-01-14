@@ -108,6 +108,21 @@ class WaveFormGenerator:
         wave = np.cos(2 * np.pi * t) * WaveFormGenerator.amplitude
         return wave.astype(RfDataConverterType.DATA_PATH_DTYPE)
 
+    @staticmethod
+    def generate_no_wave(repeat_time=1, sample_pts=1000):
+        """
+        Generates a nothing wave.
+
+        Args:
+            repeat_time (float): The time period of the waveform.
+            sample_pts (int): The number of sample points.
+
+        Returns:
+            numpy.ndarray: The generated cosine wave.
+        """
+        wave = np.zeros(sample_pts * repeat_time)
+        return wave.astype(RfDataConverterType.DATA_PATH_DTYPE)
+
 
 if __name__ == "__main__":
     # Create an instance of the WaveFormGenerator class
