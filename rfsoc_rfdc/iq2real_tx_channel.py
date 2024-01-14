@@ -89,10 +89,6 @@ class Iq2RealTxChannel:
             logging.info(
                 f"[Channel {self.channel_id}] Warning: Tx FIFO count {fifo_count} is less than {self.fifo_thres}. DMA transfer is too slow!")
 
-        # Buffer validation
-        if self.tx_buff is None:
-            raise ValueError("tx_buff has not been initialized yet.")
-
         # Trigger DMA transfer
         self.tx_dma.transfer(self.tx_buff)
 
