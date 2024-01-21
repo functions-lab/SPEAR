@@ -73,15 +73,15 @@ class Iq2RealTxChannel:
         """
         Manages the data transfer to the DAC, including handling FIFO statuses and DMA transfer.
         """
-        fifo_count = self.tx_dma.get_fifo_count()
+        # fifo_count = self.tx_dma.get_fifo_count()
 
         # Warning for low FIFO count
-        if fifo_count < self.fifo_thres:
-            self.warning_cnt += 1
-        if self.warning_cnt > 1000:
-            self.warning_cnt = 0
-            logging.info(
-                f"[Channel {self.channel_id}] Warning: Tx FIFO count {fifo_count} is less than {self.fifo_thres}. DMA transfer is too slow!")
+        # if fifo_count < self.fifo_thres:
+        #     self.warning_cnt += 1
+        # if self.warning_cnt > 1000:
+        #     self.warning_cnt = 0
+        #     logging.info(
+        #         f"[Channel {self.channel_id}] Warning: Tx FIFO count {fifo_count} is less than {self.fifo_thres}. DMA transfer is too slow!")
 
         # Trigger DMA transfer
         self.tx_dma.transfer(self.tx_buff)
