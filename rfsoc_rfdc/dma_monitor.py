@@ -10,7 +10,7 @@ class DmaMonitor(ABC):
     Based on the reading of the above two ports, we can monitor the data transmission status between DMA and the AXI4-Stream Data FIFO.
     """
 
-    def __init__(self, dma_ip, fifo_count_ip, fifo_status_ip):
+    def __init__(self, dma_ip, fifo_count_ip):
         """
         Constructs all the necessary attributes for the PynqDMA object.
         """
@@ -20,22 +20,12 @@ class DmaMonitor(ABC):
         self.fifo_count = fifo_count_ip
         self.fifo_count.setdirection("in")
         self.fifo_count.setlength(32)
-        # Configure FIFO status IP core instance
-        self.fifo_status = fifo_status_ip
-        self.fifo_status.setdirection("in")
-        self.fifo_status.setlength(1)
 
     def get_fifo_count(self):
         """
         Returns the current count of the FIFO.
         """
         return self.fifo_count.read()
-
-    def get_fifo_status(self):
-        """
-        Returns whether the FIFO is full or empty.
-        """
-        return self.fifo_status.read()
 
     def get_debug_info(self):
         """

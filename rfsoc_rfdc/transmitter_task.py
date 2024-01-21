@@ -39,16 +39,6 @@ class TransmitterTask(OverlayTask):
                 self.ol.ip_dict['dac_datapath/t230_dac3/fifo_count']).channel1
         ]
 
-        self.t230_fifo_status_ips = [
-            AxiGPIO(
-                self.ol.ip_dict['dac_datapath/t230_dac0/fifo_full']).channel1,
-            AxiGPIO(
-                self.ol.ip_dict['dac_datapath/t230_dac1/fifo_full']).channel1,
-            AxiGPIO(
-                self.ol.ip_dict['dac_datapath/t230_dac2/fifo_full']).channel1,
-            AxiGPIO(
-                self.ol.ip_dict['dac_datapath/t230_dac3/fifo_full']).channel1
-        ]
         # Initialize Tx channels
         self.t230_tx_channels = []
 
@@ -57,8 +47,7 @@ class TransmitterTask(OverlayTask):
                 Iq2RealTxChannel(
                     channel_id=ch_idx,
                     dma_ip=self.t230_dma_ips[ch_idx],
-                    fifo_count_ip=self.t230_fifo_count_ips[ch_idx],
-                    fifo_status_ip=self.t230_fifo_status_ips[ch_idx]
+                    fifo_count_ip=self.t230_fifo_count_ips[ch_idx]
                 )
             )
 

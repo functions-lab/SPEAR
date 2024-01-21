@@ -23,19 +23,18 @@ class Iq2RealTxChannel:
         channel_id (int): Identifier for the transmission channel.
         dma_ip: DMA IP.
         fifo_count_ip: AXI GPIO IP for FIFO count.
-        fifo_status_ip: AXI GPIO IP for FIFO status.
     """
 
-    def __init__(self, channel_id, dma_ip, fifo_count_ip, fifo_status_ip):
+    def __init__(self, channel_id, dma_ip, fifo_count_ip):
         """
         Initializes the Iq2RealTxChannel with specified channel ID and hardware IPs.
         """
         self.channel_id = channel_id
         self.tx_buff = None
         self.tx_dma = TxDmaMonitor(dma_ip=dma_ip,
-                                   fifo_count_ip=fifo_count_ip, fifo_status_ip=fifo_status_ip)
-        self.buff_thres = 1000
-        self.fifo_thres = 512
+                                   fifo_count_ip=fifo_count_ip)
+        self.buff_thres = 0
+        self.fifo_thres = 16
         self.warning_cnt = 0
 
     def data_copy(self, i_buff, q_buff):
@@ -67,19 +66,14 @@ class Iq2RealTxChannel:
         # Buffer copy
         self.tx_buff = allocate(shape=(2*i_buff.size,),
                                 dtype=RfDataConverterType.DATA_PATH_DTYPE)
-        self.tx_buff[0::2] = q_buff  # Even indices
-        self.tx_buff[1::2] = i_buff  # Odd indices
+        self.tx_buff[0::2] = i_buff  # Even indices
+        self.tx_buff[1::2] = q_buff  # Odd indices
 
     def transfer(self):
         """
         Manages the data transfer to the DAC, including handling FIFO statuses and DMA transfer.
         """
         fifo_count = self.tx_dma.get_fifo_count()
-        fifo_full = self.tx_dma.get_fifo_status()
-
-        # Handling FIFO full status
-        if fifo_full == 1:
-            time.sleep(1e-6)  # Sleep for 1 us to slow down the transmission
 
         # Warning for low FIFO count
         if fifo_count < self.fifo_thres:
