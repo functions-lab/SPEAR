@@ -3,6 +3,9 @@ from .waveform_generator import WaveFormGenerator
 from .overlay_task import OverlayTask
 from .iq2real_tx_channel import Iq2RealTxChannel
 from pynq.lib import AxiGPIO
+import scipy.io
+import numpy as np
+from .rfdc import RfDataConverterType
 
 
 class TransmitterTask(OverlayTask):
@@ -58,10 +61,18 @@ class TransmitterTask(OverlayTask):
                     fifo_status_ip=self.t230_fifo_status_ips[ch_idx]
                 )
             )
+
+        # Read from matlab waveform
+        wave = scipy.io.loadmat('./wifi_wave.mat')['wave']
+        real = wave.real / 4 * (2**15 - 1)
+        imag = wave.imag / 4 * (2**15 - 1)
+        self.i = np.repeat(imag.astype(RfDataConverterType.DATA_PATH_DTYPE), 1)
+        self.r = np.repeat(real.astype(RfDataConverterType.DATA_PATH_DTYPE), 1)
+
         # Generate iq samples
-        self.i_data = WaveFormGenerator.generate_sine_wave(
+        self.i_data = WaveFormGenerator.generate_cosine_wave(
             repeat_time=1000, sample_pts=1000)
-        self.q_data = WaveFormGenerator.generate_cosine_wave(
+        self.q_data = WaveFormGenerator.generate_sine_wave(
             repeat_time=1000, sample_pts=1000)
 
     def run(self):
@@ -83,14 +94,14 @@ class TransmitterTask(OverlayTask):
         if self.mode == "repeater":
             while True:
                 self.t230_tx_channels[0].transfer()
-                # self.t230_tx_channels[1].transfer()
-                # self.t230_tx_channels[2].transfer()
-                # self.t230_tx_channels[3].transfer()
+                self.t230_tx_channels[1].transfer()
+                self.t230_tx_channels[2].transfer()
+                self.t230_tx_channels[3].transfer()
 
                 self.t230_tx_channels[0].wait()
-                # self.t230_tx_channels[1].wait()
-                # self.t230_tx_channels[2].wait()
-                # self.t230_tx_channels[3].wait()
+                self.t230_tx_channels[1].wait()
+                self.t230_tx_channels[2].wait()
+                self.t230_tx_channels[3].wait()
 
         else:
             raise ValueError(f"Unrecognized mode: {self.mode}")
