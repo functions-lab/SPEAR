@@ -53,16 +53,31 @@ class TransmitterTask(OverlayTask):
 
         # Read from matlab waveform
         wave = scipy.io.loadmat('./wifi_wave.mat')['wave']
-        real = wave.real / 4 * (2**15 - 1)
-        imag = wave.imag / 4 * (2**15 - 1)
-        self.i = np.repeat(imag.astype(RfDataConverterType.DATA_PATH_DTYPE), 1)
-        self.r = np.repeat(real.astype(RfDataConverterType.DATA_PATH_DTYPE), 1)
+
+        min_real, max_real, min_imag, max_imag = np.min(wave.real), np.max(
+            wave.real), np.min(wave.imag), np.max(wave.imag)
+
+        # Finding the max and min of real and imaginary parts
+        scale = np.max([np.abs(max_real), np.abs(max_imag),
+                       np.abs(min_real), np.abs(min_imag)])
+
+        range_min = np.iinfo(np.int16).min
+        range_max = np.iinfo(np.int16).max
+
+        # Scaling the real and imaginary parts to fit within the range of np.int16
+        s_real = np.int16(
+            np.interp(wave.real, (-scale, scale), (range_min, range_max)))
+        s_imag = np.int16(
+            np.interp(wave.imag, (-scale, scale), (range_min, range_max)))
+
+        self.r = np.squeeze(s_real)
+        self.i = np.squeeze(s_imag)
 
         # Generate iq samples
-        self.i_data = WaveFormGenerator.generate_cosine_wave(
-            repeat_time=1000, sample_pts=1000)
-        self.q_data = WaveFormGenerator.generate_sine_wave(
-            repeat_time=1000, sample_pts=1000)
+        # self.r = WaveFormGenerator.generate_cosine_wave(
+        #     repeat_time=1000, sample_pts=1000)
+        # self.i = WaveFormGenerator.generate_cosine_wave(
+        #     repeat_time=1000, sample_pts=1000)
 
     def run(self):
         """
@@ -77,7 +92,7 @@ class TransmitterTask(OverlayTask):
 
         # Perform data copy
         for tx_ch in self.t230_tx_channels:
-            tx_ch.data_copy(self.q_data, self.i_data)
+            tx_ch.data_copy(self.r, self.i)
 
         # Perform multi-channel transmission
         if self.mode == "repeater":
