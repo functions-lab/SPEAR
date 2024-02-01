@@ -19,8 +19,6 @@ class WaveFormGenerator:
         generate_cosine_wave: Generates a cosine wave.
     """
 
-    amplitude = (2**15 - 1)  # Class-level attribute
-
     @staticmethod
     def generate_sine_wave(repeat_time=1, sample_pts=1000):
         """
@@ -35,7 +33,7 @@ class WaveFormGenerator:
         """
         t = np.linspace(0, repeat_time, int(
             sample_pts * repeat_time), endpoint=False)
-        wave = np.sin(2 * np.pi * t) * WaveFormGenerator.amplitude
+        wave = np.sin(2 * np.pi * t) * RfDataConverterType.DAC_MAX_SCALE
         return wave.astype(RfDataConverterType.DATA_PATH_DTYPE)
 
     @staticmethod
@@ -52,7 +50,8 @@ class WaveFormGenerator:
         """
         t = np.linspace(0, repeat_time, int(
             sample_pts * repeat_time), endpoint=False)
-        wave = np.sign(np.sin(2 * np.pi * t)) * WaveFormGenerator.amplitude
+        wave = np.sign(np.sin(2 * np.pi * t)) * \
+            RfDataConverterType.DAC_MAX_SCALE
         return wave.astype(RfDataConverterType.DATA_PATH_DTYPE)
 
     @staticmethod
@@ -70,7 +69,7 @@ class WaveFormGenerator:
         t = np.linspace(0, repeat_time, int(
             sample_pts * repeat_time), endpoint=False)
         wave = 2 * np.abs(2 * (t - np.floor(t + 0.5))) - 1
-        wave *= WaveFormGenerator.amplitude
+        wave *= RfDataConverterType.DAC_MAX_SCALE
         return wave.astype(RfDataConverterType.DATA_PATH_DTYPE)
 
     @staticmethod
@@ -88,7 +87,7 @@ class WaveFormGenerator:
         t = np.linspace(0, repeat_time, int(
             sample_pts * repeat_time), endpoint=False)
         wave = 2 * (t - np.floor(0.5 + t))
-        wave *= WaveFormGenerator.amplitude
+        wave *= RfDataConverterType.DAC_MAX_SCALE
         return wave.astype(RfDataConverterType.DATA_PATH_DTYPE)
 
     @staticmethod
@@ -105,7 +104,7 @@ class WaveFormGenerator:
         """
         t = np.linspace(0, repeat_time, int(
             sample_pts * repeat_time), endpoint=False)
-        wave = np.cos(2 * np.pi * t) * WaveFormGenerator.amplitude
+        wave = np.cos(2 * np.pi * t) * RfDataConverterType.DAC_MAX_SCALE
         return wave.astype(RfDataConverterType.DATA_PATH_DTYPE)
 
     @staticmethod

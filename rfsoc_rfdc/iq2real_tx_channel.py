@@ -15,7 +15,6 @@ class Iq2RealTxChannel:
         channel_id (int): Identifier for the transmission channel.
         tx_buff (numpy.ndarray): Buffer for holding the formatted transmission data.
         tx_dma (TxDmaMonitor): DMA monitor object for managing data transfers.
-        buff_thres (int): Threshold for the minimum size of I/Q data buffers.
         fifo_thres (int): Threshold for the FIFO count warning.
         warning_cnt (int): Counter for the number of warnings issued.
 
@@ -33,8 +32,7 @@ class Iq2RealTxChannel:
         self.tx_buff = None
         self.tx_dma = TxDmaMonitor(dma_ip=dma_ip,
                                    fifo_count_ip=fifo_count_ip)
-        self.buff_thres = 0
-        self.fifo_thres = 16
+        self.fifo_thres = 1000
         self.warning_cnt = 0
 
     def data_copy(self, i_buff, q_buff):
@@ -47,7 +45,6 @@ class Iq2RealTxChannel:
 
         Raises:
             TypeError: If i_buff or q_buff is not a numpy.ndarray or not numpy.int16.
-            ValueError: If i_buff or q_buff size is smaller than buff_thres or sizes don't match.
         """
         # Validations for input buffers
         if not isinstance(i_buff, np.ndarray) or \
@@ -56,10 +53,6 @@ class Iq2RealTxChannel:
         if i_buff.dtype != RfDataConverterType.DATA_PATH_DTYPE or \
                 q_buff.dtype != RfDataConverterType.DATA_PATH_DTYPE:
             raise TypeError("i/q_buff must be of data type numpy.int16")
-        if i_buff.size < self.buff_thres or \
-                q_buff.size < self.buff_thres:
-            raise ValueError(
-                f"i/q_buff size must be larger than {self.buff_thres}")
         if i_buff.size != q_buff.size:
             raise ValueError("i/q_buff must have the same size")
 
@@ -73,15 +66,15 @@ class Iq2RealTxChannel:
         """
         Manages the data transfer to the DAC, including handling FIFO statuses and DMA transfer.
         """
-        # fifo_count = self.tx_dma.get_fifo_count()
+        fifo_count = self.tx_dma.get_fifo_count()
 
         # Warning for low FIFO count
-        # if fifo_count < self.fifo_thres:
-        #     self.warning_cnt += 1
-        # if self.warning_cnt > 1000:
-        #     self.warning_cnt = 0
-        #     logging.info(
-        #         f"[Channel {self.channel_id}] Warning: Tx FIFO count {fifo_count} is less than {self.fifo_thres}. DMA transfer is too slow!")
+        if fifo_count < self.fifo_thres:
+            self.warning_cnt += 1
+        if self.warning_cnt > 1000:
+            self.warning_cnt = 0
+            logging.info(
+                f"[Channel {self.channel_id}] Warning: Tx FIFO count {fifo_count} is less than {self.fifo_thres}. DMA transfer is too slow!")
 
         # Trigger DMA transfer
         self.tx_dma.transfer(self.tx_buff)

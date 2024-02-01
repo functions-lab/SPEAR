@@ -166,7 +166,7 @@ class RfDataConverter:
             'CoarseMixFreq': xrfdc.COARSE_MIX_BYPASS,
             'EventSource': xrfdc.EVNT_SRC_TILE,
             'FineMixerScale': xrfdc.MIXER_SCALE_1P0,
-            'Freq': 0,
+            'Freq': 200,
             'MixerMode': xrfdc.MIXER_MODE_C2R,
             'MixerType': xrfdc.MIXER_TYPE_FINE,
             'PhaseOffset': 0
@@ -282,6 +282,9 @@ class RfDataConverter:
 class RfDataConverterType:
 
     DATA_PATH_DTYPE = np.int16
+
+    DAC_MIN_SCALE = -2**13
+    DAC_MAX_SCALE = (2**13 - 1)
 
     # Power-on Sequence Steps from page 163 of PG269: Zynq UltraScale+ RFSoC RF Data Converter v2.4 Gen 1/2/3
     POWER_ON_SEQUENCE_STEPS = [
