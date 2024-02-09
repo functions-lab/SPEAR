@@ -24,7 +24,7 @@ class Iq2RealTxChannel:
         fifo_count_ip: AXI GPIO IP for FIFO count.
     """
 
-    def __init__(self, channel_id, dma_ip, fifo_count_ip):
+    def __init__(self, channel_id, dma_ip, fifo_count_ip, debug_mode=False):
         """
         Initializes the Iq2RealTxChannel with specified channel ID and hardware IPs.
         """
@@ -34,6 +34,7 @@ class Iq2RealTxChannel:
                                    fifo_count_ip=fifo_count_ip)
         self.fifo_thres = 1000
         self.warning_cnt = 0
+        self.debug_mode = debug_mode
 
     def data_copy(self, i_buff, q_buff):
         """
@@ -56,7 +57,8 @@ class Iq2RealTxChannel:
         if i_buff.size != q_buff.size:
             raise ValueError("i/q_buff must have the same size")
 
-        # Buffer copy
+        # Buffer copy/
+
         self.tx_buff = allocate(shape=(2*i_buff.size,),
                                 dtype=RfDataConverterType.DATA_PATH_DTYPE)
         self.tx_buff[0::2] = i_buff  # Even indices
@@ -66,15 +68,16 @@ class Iq2RealTxChannel:
         """
         Manages the data transfer to the DAC, including handling FIFO statuses and DMA transfer.
         """
-        fifo_count = self.tx_dma.get_fifo_count()
+        if self.debug_mode:
+            fifo_count = self.tx_dma.get_fifo_count()
 
-        # Warning for low FIFO count
-        if fifo_count < self.fifo_thres:
-            self.warning_cnt += 1
-        if self.warning_cnt > 1000:
-            self.warning_cnt = 0
-            logging.info(
-                f"[Channel {self.channel_id}] Warning: Tx FIFO count {fifo_count} is less than {self.fifo_thres}. DMA transfer is too slow!")
+            # Warning for low FIFO count
+            if fifo_count < self.fifo_thres:
+                self.warning_cnt += 1
+            if self.warning_cnt > 1000:
+                self.warning_cnt = 0
+                logging.info(
+                    f"[Channel {self.channel_id}] Warning: Tx FIFO count {fifo_count} is less than {self.fifo_thres}. DMA transfer is too slow!")
 
         # Trigger DMA transfer
         self.tx_dma.transfer(self.tx_buff)
