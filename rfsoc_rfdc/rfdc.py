@@ -133,9 +133,10 @@ class RfDataConverter:
         rfdc_status: Instance of RfDataConverterStatus for status monitoring.
         dac_tiles: List of RfDataConverterDACTile.
         adc_tiles: List of RfDataConverterADCTile.
+        clock_src: Type of clock source for the RF data converter. Default to PLL clock.
     """
 
-    def __init__(self, overlay):
+    def __init__(self, overlay, clock_src=xrfdc.CLK_SRC_PLL):
         """
         Initialize the RF Data Converter with the given overlay.
 
@@ -148,6 +149,7 @@ class RfDataConverter:
             tile_id, tile) for tile_id, tile in enumerate(self.rfdc.dac_tiles)]
         self.adc_tiles = [RfDataConverterADCTile(
             tile_id, tile) for tile_id, tile in enumerate(self.rfdc.adc_tiles)]
+        self.clock_src = clock_src
 
     def __del__(self):
         """Shutdown RF data converters safely."""
@@ -239,7 +241,7 @@ class RfDataConverter:
 
     def config_tile(self, tile, pll_freq, sample_freq):
         """Configure a single tile."""
-        tile.DynamicPLLConfig(1, pll_freq, sample_freq)
+        tile.DynamicPLLConfig(self.clock_src, pll_freq, sample_freq)
         tile.SetupFIFO(True)
 
     def config_dac_blocks(self, tile, mixer_settings, event_settings):
