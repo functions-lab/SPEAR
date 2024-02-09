@@ -211,7 +211,7 @@ class RfDataConverter:
                 for step in RfDataConverterType.POWER_ON_SEQUENCE_STEPS:
                     if tile_state == step['Sequence Number']:
                         if step['Sequence Number'] != 15:
-                            err_msg = f"DAC tile {tile.tile_id} is NOT fully powered up! Stuck at Step: {step['State']} Description: {step['Description']}"
+                            err_msg = f"DAC tile {tile.tile_id} is NOT fully powered up! Stuck at Step {tile_state}: {step['State']} Description: {step['Description']}"
                             raise Exception(err_msg)
                         else:
                             logging.info(
@@ -231,7 +231,7 @@ class RfDataConverter:
                 for step in RfDataConverterType.POWER_ON_SEQUENCE_STEPS:
                     if tile_state == step['Sequence Number']:
                         if step['Sequence Number'] != 15:
-                            err_msg = f"ADC tile {tile.tile_id} is NOT fully powered up! Stuck at Step: {step['State']} Description: {step['Description']}"
+                            err_msg = f"ADC tile {tile.tile_id} is NOT fully powered up! Stuck at Step {tile_state}: {step['State']} Description: {step['Description']}"
                             raise Exception(err_msg)
                         else:
                             logging.info(
