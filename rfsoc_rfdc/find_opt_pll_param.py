@@ -10,7 +10,7 @@ def find_opt_pll_param(ref_clk_freq, fb_div_range, output_div_range, vco_range, 
         for M in output_div_range:
             vco_freq = ref_clk_freq * fb
             err = samp_limit - vco_freq / M
-            if 0 < err < min_delta and vco_range[0] < vco_freq < vco_range[1]:
+            if 0 < err < min_delta and vco_range[0] <= vco_freq <= vco_range[1]:
                 min_delta = err
                 best_pair = (fb, M)
 
