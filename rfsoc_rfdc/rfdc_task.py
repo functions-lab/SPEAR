@@ -9,7 +9,7 @@ class RfdcTask(OverlayTask):
     def __init__(self, overlay):
         """Initialize the task with the given overlay."""
         super().__init__(overlay, name="RfdcTask")
-        self.rfdc = RfDataConverter(overlay)
+        self.rfdc = RfDataConverter(overlay, debug_mode=True)
 
     def run(self):
         """Run the task."""
