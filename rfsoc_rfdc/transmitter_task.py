@@ -47,7 +47,8 @@ class TransmitterTask(OverlayTask):
                 Iq2RealTxChannel(
                     channel_id=ch_idx,
                     dma_ip=self.t230_dma_ips[ch_idx],
-                    fifo_count_ip=self.t230_fifo_count_ips[ch_idx]
+                    fifo_count_ip=self.t230_fifo_count_ips[ch_idx],
+                    debug_mode=True
                 )
             )
 
