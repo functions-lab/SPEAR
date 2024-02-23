@@ -136,7 +136,7 @@ class RfDataConverter:
         clock_src: Type of clock source for the RF data converter. Default to PLL clock.
     """
 
-    def __init__(self, overlay, clock_src=xrfdc.CLK_SRC_PLL):
+    def __init__(self, overlay, clock_src=xrfdc.CLK_SRC_PLL, debug_mode=False):
         """
         Initialize the RF Data Converter with the given overlay.
 
@@ -150,63 +150,89 @@ class RfDataConverter:
         self.adc_tiles = [RfDataConverterADCTile(
             tile_id, tile) for tile_id, tile in enumerate(self.rfdc.adc_tiles)]
         self.clock_src = clock_src
+        self.debug_mode = debug_mode
 
-    def __del__(self):
-        """Shutdown RF data converters safely."""
-        self.shutdown_tiles(self.dac_tiles)
-        self.shutdown_tiles(self.adc_tiles)
-
-    def init_setup(self):
-        """Perform initial setup for RF data converters."""
-        update_event = xrfdc.EVENT_MIXER
-        # Configure DAC tiles
-        dac_pll_settings = {
+        self.dac_tile_config = {
             'PLLFreq': 409.6,
-            'SampleFreq': 1024
+            'SampleFreqMhz': 4000,  # On-chip PLL ranges from 500M-6.8G
+            'SampleFreqGHz': 4.0,
         }
-        dac_mixer_settings = {
+        self.dac_block_config = {
+            'InterpolationFactor': 2,  # 1x,2x,3x,4x,5x,6x,8x,10x,12x,16x,20x,24x,40x
+            'NyquistZone': 1,
+            'UpdateEvent': xrfdc.EVENT_MIXER,
+        }
+        effective_fs = self.dac_tile_config['SampleFreqMhz'] / \
+            (self.dac_block_config['InterpolationFactor'] /
+             2)  # This determines bandwidth
+        carrier_freq = self.dac_tile_config['SampleFreqMhz'] / 2
+        self.dac_block_mixer_config = {
             'CoarseMixFreq': xrfdc.COARSE_MIX_BYPASS,
             'EventSource': xrfdc.EVNT_SRC_TILE,
             'FineMixerScale': xrfdc.MIXER_SCALE_1P0,
-            'Freq': 200,
+            # NCO frequency ranges from -Fs/2 to Fs/2
+            'Freq': carrier_freq,
             'MixerMode': xrfdc.MIXER_MODE_C2R,
             'MixerType': xrfdc.MIXER_TYPE_FINE,
-            'PhaseOffset': 0
+            'PhaseOffset': 0,
         }
-        self.config_dac_tiles(
-            self.dac_tiles, dac_pll_settings, dac_mixer_settings, update_event)
 
-        # Configure ADC tiles
-        adc_pll_settings = {
+        self.adc_tile_config = {
             'PLLFreq': 409.6,
-            'SampleFreq': 1024
+            'SampleFreqMhz': 2500,  # On-chip PLL ranges from 500M-2.5G
+            'SampleFreqGHz': 2.5,
         }
-        adc_mixer_settings = {
+        self.adc_block_config = {
+            'DecimationFactor': 2,  # 1x,2x,3x,4x,5x,6x,8x,10x,12x,16x,20x,24x,40x
+            'NyquistZone': 1,
+            'UpdateEvent': xrfdc.EVENT_MIXER,
+        }
+        self.adc_block_mixer_config = {
             'CoarseMixFreq': xrfdc.COARSE_MIX_BYPASS,
             'EventSource': xrfdc.EVNT_SRC_TILE,
             'FineMixerScale': xrfdc.MIXER_SCALE_1P0,
-            'Freq': 0,
+            # NCO frequency ranges from -Fs/2 to Fs/2
+            'Freq': -carrier_freq,
             'MixerMode': xrfdc.MIXER_MODE_R2C,
             'MixerType': xrfdc.MIXER_TYPE_FINE,
             'PhaseOffset': 0
         }
-        self.config_adc_tiles(
-            self.adc_tiles, adc_pll_settings, adc_mixer_settings, update_event)
 
-    def shutdown_tiles(self, tiles):
+        # NCO freq checker
+        if carrier_freq > self.dac_tile_config['SampleFreqMhz'] / 2:
+            raise ValueError("DAC NCO frequency ranges from -Fs/2 to Fs/2")
+        # if carrier_freq > self.adc_tile_config['SampleFreqMhz'] / 2:
+        #     raise ValueError("ADC NCO frequency ranges from -Fs/2 to Fs/2")
+
+    def __del__(self):
+        """Shutdown RF data converters safely."""
+        self.shutdown_tiles()
+
+    def init_setup(self):
+        """Perform initial setup for RF data converters."""
+        if self.debug_mode:
+            logging.info(f"IPStatus: {self.rfdc.IPStatus}")
+            logging.info(f"ClkDistribution: {self.rfdc.ClkDistribution}")
+        self.config_dac_tiles()  # Configure DAC tiles
+        self.config_adc_tiles()  # Configure ADC tiles
+
+    def shutdown_tiles(self):
         """Safely shutdown all tiles."""
-        for tile in tiles:
+        for tile in self.dac_tiles:
+            tile.Shutdown()
+        for tile in self.adc_tiles:
             tile.Shutdown()
         logging.info(f"All tiles has been safely shutdown!")
 
-    def config_dac_tiles(self, tiles, pll_settings, mixer_settings, event_settings):
+    def config_dac_tiles(self):
         """Configure DAC tiles."""
-        for tile in tiles:
+        for tile in self.dac_tiles:
             if self.rfdc_status.get_dac_tile_enb(tile.tile_id):
-                # Config tile
-                self.config_tile(
-                    tile, pll_settings['PLLFreq'], pll_settings['SampleFreq'])
-                # Check tile status
+                # Configure a single tile
+                tile.DynamicPLLConfig(
+                    self.clock_src, self.dac_tile_config['PLLFreq'], self.dac_tile_config['SampleFreqMhz'])
+                tile.SetupFIFO(True)
+                # Check tile state
                 tile_state = self.rfdc_status.get_dac_tile_state(tile.tile_id)
                 for step in RfDataConverterType.POWER_ON_SEQUENCE_STEPS:
                     if tile_state == step['Sequence Number']:
@@ -217,16 +243,17 @@ class RfDataConverter:
                             logging.info(
                                 f"DAC tile {tile.tile_id} is fully powered up!")
                         break
-                self.config_dac_blocks(tile, mixer_settings, event_settings)
+                self.config_dac_blocks(tile)
 
-    def config_adc_tiles(self, tiles, pll_settings, mixer_settings, event_settings):
+    def config_adc_tiles(self):
         """Configure ADC tiles."""
-        for tile in tiles:
+        for tile in self.adc_tiles:
             if self.rfdc_status.get_adc_tile_enb(tile.tile_id):
-                # Config tile
-                self.config_tile(
-                    tile, pll_settings['PLLFreq'], pll_settings['SampleFreq'])
-                # Check tile status
+                # Configure a single tile
+                tile.DynamicPLLConfig(
+                    self.clock_src, self.adc_tile_config['PLLFreq'], self.adc_tile_config['SampleFreqMhz'])
+                tile.SetupFIFO(True)
+                # Check tile state
                 tile_state = self.rfdc_status.get_adc_tile_state(tile.tile_id)
                 for step in RfDataConverterType.POWER_ON_SEQUENCE_STEPS:
                     if tile_state == step['Sequence Number']:
@@ -237,21 +264,20 @@ class RfDataConverter:
                             logging.info(
                                 f"ADC tile {tile.tile_id} is fully powered up!")
                         break
-                self.config_adc_blocks(tile, mixer_settings, event_settings)
+                self.config_adc_blocks(tile)
 
-    def config_tile(self, tile, pll_freq, sample_freq):
-        """Configure a single tile."""
-        tile.DynamicPLLConfig(self.clock_src, pll_freq, sample_freq)
-        tile.SetupFIFO(True)
-
-    def config_dac_blocks(self, tile, mixer_settings, event_settings):
+    def config_dac_blocks(self, tile):
         """Configure all DAC blocks within a tile."""
         block_mask = 0x1
         for block_id, block in enumerate(tile.blocks):
             block_enabled = self.rfdc_status.get_dac_block_enb(
                 tile.tile_id, block_id)
             if block_enabled:
-                self.config_block(block, mixer_settings, event_settings)
+                # Configure a single block
+                block.NyquistZone = self.dac_block_config['NyquistZone']
+                block.MixerSettings = self.dac_block_mixer_config
+                block.UpdateEvent(self.dac_block_config['UpdateEvent'])
+                block.InterpolationFactor = self.dac_block_config['InterpolationFactor']
                 logging.info(
                     f"DAC tile {tile.tile_id} DAC block {block_id} is enabled!")
             else:
@@ -259,26 +285,24 @@ class RfDataConverter:
                     f"DAC tile {tile.tile_id} DAC block {block_id} is NOT enabled!")
             block_mask = block_mask << 1
 
-    def config_adc_blocks(self, tile, mixer_settings, event_settings):
+    def config_adc_blocks(self, tile):
         """Configure all ADC blocks within a tile."""
         block_mask = 0x1
         for block_id, block in enumerate(tile.blocks):
             block_enabled = self.rfdc_status.get_adc_block_enb(
                 tile.tile_id, block_id)
             if block_enabled:
-                self.config_block(block, mixer_settings, event_settings)
+                # Configure a single block
+                block.NyquistZone = self.adc_block_config['NyquistZone']
+                block.MixerSettings = self.adc_block_mixer_config
+                block.UpdateEvent(self.adc_block_config['UpdateEvent'])
+                block.DecimationFactor = self.adc_block_config['DecimationFactor']
                 logging.info(
                     f"ADC tile {tile.tile_id} ADC block {block_id} is enabled!")
             else:
                 logging.info(
                     f"ADC tile {tile.tile_id} ADC block {block_id} is NOT enabled!")
             block_mask = block_mask << 1
-
-    def config_block(self, block, mixer_settings, event_settings):
-        """Configure a single block."""
-        block.NyquistZone = 1
-        block.MixerSettings = mixer_settings
-        block.UpdateEvent(event_settings)
 
 
 class RfDataConverterType:
