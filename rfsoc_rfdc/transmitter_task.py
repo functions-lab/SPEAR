@@ -6,6 +6,7 @@ from pynq.lib import AxiGPIO
 import scipy.io
 import numpy as np
 from .rfdc import RfDataConverterType
+from .matlab_iq_loader import MatlabIqLoader
 
 
 class TransmitterTask(OverlayTask):
@@ -22,21 +23,12 @@ class TransmitterTask(OverlayTask):
         self.mode = "repeater"  # or "real_time"
         # Hardware IPs
         self.t230_dma_ips = [
-            self.ol.dac_datapath.t230_dac0.axi_dma,
-            self.ol.dac_datapath.t230_dac1.axi_dma,
-            self.ol.dac_datapath.t230_dac2.axi_dma,
-            self.ol.dac_datapath.t230_dac3.axi_dma
+            self.ol.dac_datapath.t230_dac0.axi_dma
         ]
 
         self.t230_fifo_count_ips = [
             AxiGPIO(
-                self.ol.ip_dict['dac_datapath/t230_dac0/fifo_count']).channel1,
-            AxiGPIO(
-                self.ol.ip_dict['dac_datapath/t230_dac1/fifo_count']).channel1,
-            AxiGPIO(
-                self.ol.ip_dict['dac_datapath/t230_dac2/fifo_count']).channel1,
-            AxiGPIO(
-                self.ol.ip_dict['dac_datapath/t230_dac3/fifo_count']).channel1
+                self.ol.ip_dict['dac_datapath/t230_dac0/fifo_count']).channel1
         ]
 
         # Initialize Tx channels
@@ -52,31 +44,17 @@ class TransmitterTask(OverlayTask):
                 )
             )
 
-        # Read from matlab waveform
-        wave = scipy.io.loadmat('./wifi_wave.mat')['wave']
+        # Initialize MatlabIqLoader
+        self.matlab_loader = MatlabIqLoader(
+            file_path="./wifi_wave.mat", key="wave")
+        self.matlab_loader.load_matlab_waveform()
 
-        # Find the min and max of the real and imaginary parts
-        min_real, max_real, min_imag, max_imag = np.min(wave.real), np.max(
-            wave.real), np.min(wave.imag), np.max(wave.imag)
-
-        # Find a proper scale factor to fit the real and imaginary parts within the range of np.int16
-        scale = np.max([np.abs(max_real), np.abs(max_imag),
-                       np.abs(min_real), np.abs(min_imag)])
-
-        # Set the proper range for full scale
+        # Set the range for full scale
         range_min, range_max = RfDataConverterType.DAC_MIN_SCALE, RfDataConverterType.DAC_MAX_SCALE
 
-        # Scaling the real and imaginary parts to fit within the range of np.int16
-        scaled_real = np.int16(
-            np.interp(wave.real, (-scale, scale), (range_min, range_max)))
-        scaled_imag = np.int16(
-            np.interp(wave.imag, (-scale, scale), (range_min, range_max)))
-
-        scaled_real = np.squeeze(scaled_real)
-        scaled_imag = np.squeeze(scaled_imag)
-
-        self.i_samples = scaled_real
-        self.q_samples = scaled_imag
+        # Scale the waveform
+        self.matlab_loader.scale_waveform(range_min, range_max)
+        self.i_samples, self.q_samples = self.matlab_loader.get_iq_samples()
 
         # Generate I/Q samples for a tone
         # self.i_samples = WaveFormGenerator.generate_cosine_wave(
@@ -103,14 +81,6 @@ class TransmitterTask(OverlayTask):
         if self.mode == "repeater":
             while True:
                 self.t230_tx_channels[0].transfer()
-                self.t230_tx_channels[1].transfer()
-                self.t230_tx_channels[2].transfer()
-                self.t230_tx_channels[3].transfer()
-
                 self.t230_tx_channels[0].wait()
-                self.t230_tx_channels[1].wait()
-                self.t230_tx_channels[2].wait()
-                self.t230_tx_channels[3].wait()
-
         else:
             raise ValueError(f"Unrecognized mode: {self.mode}")
