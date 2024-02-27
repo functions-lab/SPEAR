@@ -150,12 +150,11 @@ class RfDataConverter:
         self.adc_tiles = [RfDataConverterADCTile(
             tile_id, tile) for tile_id, tile in enumerate(self.rfdc.adc_tiles)]
         self.clock_src = clock_src
-        self.debug_mode = debug_mode
 
         self.dac_tile_config = {
             'PLLFreq': 409.6,
-            'SampleFreqMhz': 4000,  # On-chip PLL ranges from 500M-6.8G
-            'SampleFreqGHz': 4.0,
+            'SampleFreqMhz': 1000,  # On-chip PLL ranges from 500M-6.8G
+            'SampleFreqGHz': 1.0,
         }
         self.dac_block_config = {
             'InterpolationFactor': 2,  # 1x,2x,3x,4x,5x,6x,8x,10x,12x,16x,20x,24x,40x
@@ -165,7 +164,8 @@ class RfDataConverter:
         effective_fs = self.dac_tile_config['SampleFreqMhz'] / \
             (self.dac_block_config['InterpolationFactor'] /
              2)  # This determines bandwidth
-        carrier_freq = self.dac_tile_config['SampleFreqMhz'] / 2
+        # carrier_freq = self.dac_tile_config['SampleFreqMhz'] / 2
+        carrier_freq = 200
         self.dac_block_mixer_config = {
             'CoarseMixFreq': xrfdc.COARSE_MIX_BYPASS,
             'EventSource': xrfdc.EVNT_SRC_TILE,
@@ -179,8 +179,8 @@ class RfDataConverter:
 
         self.adc_tile_config = {
             'PLLFreq': 409.6,
-            'SampleFreqMhz': 2500,  # On-chip PLL ranges from 500M-2.5G
-            'SampleFreqGHz': 2.5,
+            'SampleFreqMhz': 1000,  # On-chip PLL ranges from 500M-2.5G
+            'SampleFreqGHz': 1.0,
         }
         self.adc_block_config = {
             'DecimationFactor': 2,  # 1x,2x,3x,4x,5x,6x,8x,10x,12x,16x,20x,24x,40x
@@ -201,8 +201,8 @@ class RfDataConverter:
         # NCO freq checker
         if carrier_freq > self.dac_tile_config['SampleFreqMhz'] / 2:
             raise ValueError("DAC NCO frequency ranges from -Fs/2 to Fs/2")
-        # if carrier_freq > self.adc_tile_config['SampleFreqMhz'] / 2:
-        #     raise ValueError("ADC NCO frequency ranges from -Fs/2 to Fs/2")
+        if carrier_freq > self.adc_tile_config['SampleFreqMhz'] / 2:
+            raise ValueError("ADC NCO frequency ranges from -Fs/2 to Fs/2")
 
     def __del__(self):
         """Shutdown RF data converters safely."""
@@ -210,9 +210,6 @@ class RfDataConverter:
 
     def init_setup(self):
         """Perform initial setup for RF data converters."""
-        if self.debug_mode:
-            logging.info(f"IPStatus: {self.rfdc.IPStatus}")
-            logging.info(f"ClkDistribution: {self.rfdc.ClkDistribution}")
         self.config_dac_tiles()  # Configure DAC tiles
         self.config_adc_tiles()  # Configure ADC tiles
 
@@ -224,11 +221,23 @@ class RfDataConverter:
             tile.Shutdown()
         logging.info(f"All tiles has been safely shutdown!")
 
+    def dump_dac_clk(self, tile_id):
+        logging.info(
+            f"IPStatus: {self.rfdc.IPStatus['DACTileStatus'][tile_id]}")
+        logging.info(
+            f"ClkDistribution: {self.rfdc.ClkDistribution['DAC'][tile_id]}")
+
+    def dump_adc_clk(self, tile_id):
+        logging.info(
+            f"IPStatus: {self.rfdc.IPStatus['ADCTileStatus'][tile_id]}")
+        logging.info(
+            f"ClkDistribution: {self.rfdc.ClkDistribution['ADC'][tile_id]}")
+
     def config_dac_tiles(self):
         """Configure DAC tiles."""
         for tile in self.dac_tiles:
             if self.rfdc_status.get_dac_tile_enb(tile.tile_id):
-                # Configure a single tile
+                # Configure clock a single tile
                 tile.DynamicPLLConfig(
                     self.clock_src, self.dac_tile_config['PLLFreq'], self.dac_tile_config['SampleFreqMhz'])
                 tile.SetupFIFO(True)
@@ -236,6 +245,9 @@ class RfDataConverter:
                 tile_state = self.rfdc_status.get_dac_tile_state(tile.tile_id)
                 for step in RfDataConverterType.POWER_ON_SEQUENCE_STEPS:
                     if tile_state == step['Sequence Number']:
+                        clock_dist_fail = (10 >= step['Sequence Number'] >= 6)
+                        if clock_dist_fail and self.debug_mode:
+                            self.dump_dac_clk(tile.tile_id)
                         if step['Sequence Number'] != 15:
                             err_msg = f"DAC tile {tile.tile_id} is NOT fully powered up! Stuck at Step {tile_state}: {step['State']} Description: {step['Description']}"
                             raise Exception(err_msg)
@@ -257,6 +269,9 @@ class RfDataConverter:
                 tile_state = self.rfdc_status.get_adc_tile_state(tile.tile_id)
                 for step in RfDataConverterType.POWER_ON_SEQUENCE_STEPS:
                     if tile_state == step['Sequence Number']:
+                        clock_dist_fail = (10 >= step['Sequence Number'] >= 6)
+                        if clock_dist_fail and self.debug_mode:
+                            self.dump_adc_clk(tile.tile_id)
                         if step['Sequence Number'] != 15:
                             err_msg = f"ADC tile {tile.tile_id} is NOT fully powered up! Stuck at Step {tile_state}: {step['State']} Description: {step['Description']}"
                             raise Exception(err_msg)
