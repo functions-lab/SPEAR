@@ -150,11 +150,12 @@ class RfDataConverter:
         self.adc_tiles = [RfDataConverterADCTile(
             tile_id, tile) for tile_id, tile in enumerate(self.rfdc.adc_tiles)]
         self.clock_src = clock_src
+        self.debug_mode = debug_mode
 
         self.dac_tile_config = {
             'PLLFreq': 409.6,
-            'SampleFreqMhz': 1000,  # On-chip PLL ranges from 500M-6.8G
-            'SampleFreqGHz': 1.0,
+            'SampleFreqMhz': 1024,  # On-chip PLL ranges from 500M-6.8G
+            'SampleFreqGHz': 1.024,
         }
         self.dac_block_config = {
             'InterpolationFactor': 2,  # 1x,2x,3x,4x,5x,6x,8x,10x,12x,16x,20x,24x,40x
@@ -179,8 +180,8 @@ class RfDataConverter:
 
         self.adc_tile_config = {
             'PLLFreq': 409.6,
-            'SampleFreqMhz': 1000,  # On-chip PLL ranges from 500M-2.5G
-            'SampleFreqGHz': 1.0,
+            'SampleFreqMhz': 1024,  # On-chip PLL ranges from 500M-2.5G
+            'SampleFreqGHz': 1.024,
         }
         self.adc_block_config = {
             'DecimationFactor': 2,  # 1x,2x,3x,4x,5x,6x,8x,10x,12x,16x,20x,24x,40x
