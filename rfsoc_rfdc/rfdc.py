@@ -165,8 +165,8 @@ class RfDataConverter:
         effective_fs = self.dac_tile_config['SampleFreqMhz'] / \
             (self.dac_block_config['InterpolationFactor'] /
              2)  # This determines bandwidth
-        # carrier_freq = self.dac_tile_config['SampleFreqMhz'] / 2
-        carrier_freq = 200
+        carrier_freq = self.dac_tile_config['SampleFreqMhz'] / 2
+
         self.dac_block_mixer_config = {
             'CoarseMixFreq': xrfdc.COARSE_MIX_BYPASS,
             'EventSource': xrfdc.EVNT_SRC_TILE,
