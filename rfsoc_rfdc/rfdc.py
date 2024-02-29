@@ -165,14 +165,14 @@ class RfDataConverter:
         effective_fs = self.dac_tile_config['SampleFreqMhz'] / \
             (self.dac_block_config['InterpolationFactor'] /
              2)  # This determines bandwidth
-        carrier_freq = self.dac_tile_config['SampleFreqMhz'] / 2
+        carrier_freq_mhz = self.dac_tile_config['SampleFreqMhz'] / 2
 
         self.dac_block_mixer_config = {
             'CoarseMixFreq': xrfdc.COARSE_MIX_BYPASS,
             'EventSource': xrfdc.EVNT_SRC_TILE,
             'FineMixerScale': xrfdc.MIXER_SCALE_1P0,
             # NCO frequency ranges from -Fs/2 to Fs/2
-            'Freq': carrier_freq,
+            'Freq': carrier_freq_mhz,
             'MixerMode': xrfdc.MIXER_MODE_C2R,
             'MixerType': xrfdc.MIXER_TYPE_FINE,
             'PhaseOffset': 0,
@@ -193,16 +193,16 @@ class RfDataConverter:
             'EventSource': xrfdc.EVNT_SRC_TILE,
             'FineMixerScale': xrfdc.MIXER_SCALE_1P0,
             # NCO frequency ranges from -Fs/2 to Fs/2
-            'Freq': -carrier_freq,
+            'Freq': -carrier_freq_mhz,
             'MixerMode': xrfdc.MIXER_MODE_R2C,
             'MixerType': xrfdc.MIXER_TYPE_FINE,
             'PhaseOffset': 0
         }
 
         # NCO freq checker
-        if carrier_freq > self.dac_tile_config['SampleFreqMhz'] / 2:
+        if carrier_freq_mhz > self.dac_tile_config['SampleFreqMhz'] / 2:
             raise ValueError("DAC NCO frequency ranges from -Fs/2 to Fs/2")
-        if carrier_freq > self.adc_tile_config['SampleFreqMhz'] / 2:
+        if carrier_freq_mhz > self.adc_tile_config['SampleFreqMhz'] / 2:
             raise ValueError("ADC NCO frequency ranges from -Fs/2 to Fs/2")
 
     def __del__(self):
