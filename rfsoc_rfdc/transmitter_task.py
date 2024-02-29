@@ -3,7 +3,6 @@ from .waveform_generator import WaveFormGenerator
 from .overlay_task import OverlayTask
 from .iq2real_tx_channel import Iq2RealTxChannel
 from pynq.lib import AxiGPIO
-import scipy.io
 import numpy as np
 from .rfdc import RfDataConverterType
 from .matlab_iq_loader import MatlabIqLoader
@@ -40,7 +39,7 @@ class TransmitterTask(OverlayTask):
                     channel_id=ch_idx,
                     dma_ip=self.t230_dma_ips[ch_idx],
                     fifo_count_ip=self.t230_fifo_count_ips[ch_idx],
-                    debug_mode=True
+                    debug_mode=False
                 )
             )
 
