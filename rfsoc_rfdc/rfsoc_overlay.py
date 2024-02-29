@@ -34,7 +34,7 @@ class RFSoCOverlay(Overlay):
             logging.info(f'"Writing bitstream {bitstream_fname} to RFSoC."')
             path_to_bitstream = os.path.join(curr_dir, bitstream_fname)
         # Create Overlay
-        super().__init__(path_to_bitstream, **kwargs)
+        super().__init__(path_to_bitstream, ignore_version=True, **kwargs)
 
         # Print out all IPs in bit stream file
         for i in self.ip_dict:
