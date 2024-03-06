@@ -71,10 +71,16 @@ class RxDmaMonitor(DmaMonitor):
         """
         Initiates a DMA transfer for reception.
         """
-        self.dma.recvchannel.transfer(buffer)
+        try:
+            self.dma.recvchannel.transfer(buffer)
+        except:
+            self.get_debug_info()
 
     def wait(self):
         """
         Waits for the DMA transfer to complete for reception.
         """
-        self.dma.recvchannel.wait()
+        try:
+            self.dma.recvchannel.wait()
+        except:
+            self.get_debug_info()

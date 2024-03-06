@@ -192,14 +192,13 @@ class RfDataConverter:
             'CoarseMixFreq': xrfdc.COARSE_MIX_BYPASS,
             'EventSource': xrfdc.EVNT_SRC_TILE,
             'FineMixerScale': xrfdc.MIXER_SCALE_1P0,
-            # NCO frequency ranges from -Fs/2 to Fs/2
             'Freq': -carrier_freq_mhz,
             'MixerMode': xrfdc.MIXER_MODE_R2C,
             'MixerType': xrfdc.MIXER_TYPE_FINE,
             'PhaseOffset': 0
         }
 
-        # NCO freq checker
+        # NCO freq checker: -Fs/2 to Fs/2
         if carrier_freq_mhz > self.dac_tile_config['SampleFreqMhz'] / 2:
             raise ValueError("DAC NCO frequency ranges from -Fs/2 to Fs/2")
         if carrier_freq_mhz > self.adc_tile_config['SampleFreqMhz'] / 2:
