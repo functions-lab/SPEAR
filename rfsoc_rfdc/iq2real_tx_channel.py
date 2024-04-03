@@ -24,9 +24,6 @@ class Iq2RealTxChannel:
     """
 
     def __init__(self, channel_id, dma_ip, fifo_count_ip, debug_mode=False):
-        """
-        Initializes the Iq2RealTxChannel with specified channel ID and hardware IPs.
-        """
         self.channel_id = channel_id
         self.tx_buff = None
         self.tx_dma = TxDmaMonitor(dma_ip=dma_ip,
@@ -35,16 +32,6 @@ class Iq2RealTxChannel:
         self.debug_mode = debug_mode
 
     def data_copy(self, i_buff, q_buff):
-        """
-        Prepares and formats the I/Q data for transmission.
-
-        Args:
-            i_buff (numpy.ndarray): Buffer containing I (In-phase) data samples.
-            q_buff (numpy.ndarray): Buffer containing Q (Quadrature) data samples.
-
-        Raises:
-            TypeError: If i_buff or q_buff is not a numpy.ndarray or not numpy.int16.
-        """
         # Validations for input buffers
         if not isinstance(i_buff, np.ndarray) or \
                 not isinstance(q_buff, np.ndarray):
@@ -62,9 +49,6 @@ class Iq2RealTxChannel:
         self.tx_buff[1::2] = q_buff  # Odd indices
 
     def transfer(self):
-        """
-        Manages the data transfer to the DAC, including handling FIFO statuses and DMA transfer.
-        """
         if self.debug_mode:
             fifo_count = self.tx_dma.get_fifo_count()
 
@@ -80,7 +64,4 @@ class Iq2RealTxChannel:
         self.tx_dma.transfer(self.tx_buff)
 
     def wait(self):
-        """
-        Waits for the DMA transfer to complete.
-        """
         self.tx_dma.wait()

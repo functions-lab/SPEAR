@@ -2,10 +2,13 @@ from .overlay_task import OverlayTask
 from .real2iq_rx_channel import Real2IqRxChannel
 from .adc_data_plotter import AdcDataPlotter
 from pynq.lib import AxiGPIO
+# Don't skip this! You need this line of have PacketGenerator to work
+from .packet_generator import PacketGenerator
+import time
 
 
 class ReceiverTask(OverlayTask):
-    def __init__(self, overlay, num_of_pts_plotted=512, buffer_size=1024):
+    def __init__(self, overlay, buffer_size=1024):
         super().__init__(overlay, name="ReceiverTask")
         self.buffer_size = buffer_size
 
@@ -35,20 +38,31 @@ class ReceiverTask(OverlayTask):
                 )
             )
 
-        for pkg_gen in self.t226_pkt_generator_ips:
-            pkg_gen.disable()
-            pkg_gen.packetsize = 256
-            pkg_gen.enable()
-
         # Initialize plotter
-        self.plotter = AdcDataPlotter(num_of_pts_plotted)
+        self.plotter = AdcDataPlotter()
 
     def run(self):
+        for pkg_gen in self.t226_pkt_generator_ips:
+            pkg_gen.packetsize = 128
+        pkg_gen.enable()
+
         while True:
             # Receive data and convert to I/Q format
             self.t226_rx_channels[0].transfer()
             self.t226_rx_channels[0].wait()
-            i_data, q_data = self.t226_rx_channels[0].data_copy()
-
-            # Update the plot with I/Q data
+            i_data = self.t226_rx_channels[0].i_data
+            q_data = self.t226_rx_channels[0].q_data
+            # # Update the plot with I/Q data
             self.plotter.update_plot(i_data, q_data)
+
+            pkg_count_ip = AxiGPIO(
+                self.ol.ip_dict['adc_datapath/t226_adc0/fifo_count']).channel2
+
+            counter = pkg_count_ip.read()
+
+            pkt_gen_ip = self.ol.adc_datapath.t226_adc0.axis_packet_generator
+            count, status = pkt_gen_ip._count, pkt_gen_ip.status()
+            print(
+                f"accumulate count {count}, status {status}, counter {counter}")
+
+            time.sleep(1)

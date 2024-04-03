@@ -16,8 +16,10 @@ class TransmitterTask(OverlayTask):
     using the specified hardware IPs.
     """
 
-    def __init__(self, overlay):
+    def __init__(self, overlay, file_path="./wifi_wave.mat"):
         super().__init__(overlay, name="TransmitterTask")
+        # Waveform file name
+        self.file_path = file_path
         # Operating mode
         self.mode = "repeater"  # or "real_time"
         # Hardware IPs
@@ -45,7 +47,7 @@ class TransmitterTask(OverlayTask):
 
         # Initialize MatlabIqLoader
         self.matlab_loader = MatlabIqLoader(
-            file_path="./wifi_wave.mat", key="wave")
+            file_path=self.file_path, key="wave")
         self.matlab_loader.load_matlab_waveform()
 
         # Set the range for full scale
@@ -56,9 +58,13 @@ class TransmitterTask(OverlayTask):
         self.i_samples, self.q_samples = self.matlab_loader.get_iq_samples()
 
         # Generate I/Q samples for a tone
-        # self.i_samples = WaveFormGenerator.generate_cosine_wave(
-        #     repeat_time=1000, sample_pts=1000)
-        # self.q_samples = WaveFormGenerator.generate_sine_wave(
+        # self.i_samples = WaveFormGenerator.generate_sine_wave(
+        #     repeat_time=1000, sample_pts=10000)
+        # self.q_samples = WaveFormGenerator.generate_no_wave(
+        #     repeat_time=1000, sample_pts=10000)
+
+        # Generate I/Q samples for a Zadoff-Chu sequence
+        # self.i_samples, self.q_samples = WaveFormGenerator.generate_zadoff_chu_wave(
         #     repeat_time=1000, sample_pts=1000)
 
     def run(self):

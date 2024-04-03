@@ -23,7 +23,7 @@ class Real2IqRxChannel:
         fifo_count_ip: AXI GPIO IP for FIFO count.
     """
 
-    def __init__(self, channel_id, dma_ip, fifo_count_ip, buff_size=1000, debug_mode=False):
+    def __init__(self, channel_id, dma_ip, fifo_count_ip, buff_size=1024, debug_mode=False):
         """
         Initializes the Real2IqRxChannel with specified channel ID and hardware IPs.
         """
@@ -60,18 +60,10 @@ class Real2IqRxChannel:
         """
         self.rx_dma.wait()
 
-    def data_copy(self):
-        """
-        Converts the received real data into I/Q format.
+    @property
+    def i_data(self):
+        return self.rx_buff[0::2]  # Even indices
 
-        Returns:
-            i_data (numpy.ndarray): In-phase data component.
-            q_data (numpy.ndarray): Quadrature data component.
-        """
-        if self.rx_buff is None:
-            raise ValueError("Receive buffer is not allocated")
-
-        i_data = self.rx_buff[0::2]  # Even indices
-        q_data = self.rx_buff[1::2]  # Odd indices
-
-        return i_data, q_data
+    @property
+    def q_data(self):
+        return self.rx_buff[1::2]  # Odd indices

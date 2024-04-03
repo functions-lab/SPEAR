@@ -58,7 +58,7 @@ class RFSoCOverlay(Overlay):
         all_files = sorted(os.listdir(directory))
 
         # Regex pattern to match the .bit file
-        bit_pattern = r"rfsoc_rfdc_v.*\.bit$"
+        bit_pattern = r"rfsoc_rfdc.*\.bit$"
 
         # Find all .bit files that match the pattern
         bit_files = [f for f in all_files if re.match(bit_pattern, f)]

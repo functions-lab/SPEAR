@@ -108,6 +108,36 @@ class WaveFormGenerator:
         return wave.astype(RfDataConverterType.DATA_PATH_DTYPE)
 
     @staticmethod
+    def generate_zadoff_chu_wave(repeat_time=1, sample_pts=1000):
+        u = 1  # Root index of the the ZC sequence
+        seq_length = sample_pts * repeat_time
+        q = 0  # Cyclic shift of the sequence
+
+        for el in [u, seq_length, q]:
+            if not float(el).is_integer():
+                raise ValueError('{} is not an integer'.format(el))
+        if u <= 0:
+            raise ValueError('u is not stricly positive')
+        if u >= seq_length:
+            raise ValueError('u is not stricly smaller than seq_length')
+        if np.gcd(u, seq_length) != 1:
+            raise ValueError(
+                'the greatest common denominator of u and seq_length is not 1')
+
+        cf = seq_length % 2
+        n = np.arange(seq_length)
+        zcseq = np.exp(-1j * np.pi * u * n * (n+cf+2.*q) / seq_length)
+
+        zcseq_real = np.real(zcseq) * RfDataConverterType.DAC_MAX_SCALE
+        zcseq_real = zcseq_real.astype(
+            RfDataConverterType.DATA_PATH_DTYPE)
+        zcseq_imag = np.imag(zcseq) * RfDataConverterType.DAC_MAX_SCALE
+        zcseq_imag = zcseq_imag.astype(
+            RfDataConverterType.DATA_PATH_DTYPE)
+
+        return zcseq_real, zcseq_imag
+
+    @staticmethod
     def generate_no_wave(repeat_time=1, sample_pts=1000):
         """
         Generates a nothing wave.
@@ -132,9 +162,10 @@ if __name__ == "__main__":
     square_wave = generator.generate_square_wave()
     triangle_wave = generator.generate_triangle_wave()
     sawtooth_wave = generator.generate_sawtooth_wave()
+    zadoff_chu_wave = generator.generate_zadoff_chu_wave()
 
     # Plotting
-    fig, axs = plt.subplots(4, 1, figsize=(10, 8))
+    fig, axs = plt.subplots(5, 1, figsize=(10, 8))
 
     # Plot sine wave
     axs[0].plot(sine_wave)
@@ -151,6 +182,10 @@ if __name__ == "__main__":
     # Plot sawtooth wave
     axs[3].plot(sawtooth_wave)
     axs[3].set_title("Sawtooth Wave")
+
+    # Plot sawtooth wave
+    axs[4].plot(zadoff_chu_wave)
+    axs[4].set_title("Zadoff Chu Wave")
 
     # Display the plot
     plt.tight_layout()

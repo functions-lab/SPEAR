@@ -1,6 +1,6 @@
 from pynq import DefaultIP
 
-_fsm_lut = ['IDLE', 'COUNT', 'LAST']
+_fsm_lut = ['IDLE', 'COUNT', 'LAST', 'ERR']
 
 
 class PacketGenerator(DefaultIP):
@@ -9,7 +9,8 @@ class PacketGenerator(DefaultIP):
         super().__init__(description=description)
         self._count = 16
 
-    bindto = ['strathsdr.com:strathsdr:axis_packet_generator:1.0']
+    # bindto = ['strathsdr.com:strathsdr:axis_packet_generator:1.0']
+    bindto = ['user.org:user:axis_packet_generator:2.0']
 
     @property
     def _enable(self):

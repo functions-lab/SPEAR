@@ -9,7 +9,7 @@ class CmacTask(OverlayTask):
     def __init__(self, overlay):
         """Initialize the task with the given overlay."""
         super().__init__(overlay, name="RfdcTask")
-        self.cmac = overlay.cmac
+        self.cmac = overlay.cmac_usplus_0
 
         # Put CMAC in internal Loopback Mode
         self.cmac.internal_loopback = 0
