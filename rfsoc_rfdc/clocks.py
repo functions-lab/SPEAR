@@ -1,5 +1,6 @@
 import os
 import xrfclk
+import logging
 
 
 def _get_lmclk_devices():
@@ -134,6 +135,9 @@ def set_custom_lmclks():
     # Get custom ref clock locs
     cwd = os.path.dirname(os.path.realpath(__file__))
     lmk_loc, lmx_loc = _get_custom_lmclks(cwd)
+
+    logging.info(f"Searching for LMK clock configs in {lmk_loc}")
+    logging.info(f"Searching for LMX clock configs in {lmx_loc}")
 
     # Get custom ref clock props
     clk_props = _get_custom_lmclk_props(lmk_loc, lmx_loc)
