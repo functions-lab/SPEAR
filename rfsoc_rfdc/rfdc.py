@@ -131,17 +131,17 @@ class RfDataConverter:
         """Shutdown RF data converters safely."""
         self.shutdown_tiles()
 
-    def init_setup(self, dac_samp_rate=1e9, adc_samp_rate=1e9, carrier_freq=0.5e9):
+    def init_setup(self, dac_samp_rate=2e9, adc_samp_rate=2e9, carrier_freq=0.5e9):
         """Perform initial setup for RF data converters."""
         carrier_freq_mhz = carrier_freq / 1e6
 
         self.dac_tile_config = {
-            'PLLFreq': 409.6,
+            'RefClkMhz': 500.0,
             'SampleFreqMhz': dac_samp_rate / 1e6,  # On-chip PLL ranges from 500M-6.8G
             'SampleFreqGHz': dac_samp_rate / 1e9,
         }
         self.dac_block_config = {
-            'InterpolationFactor': 2,  # 1x,2x,3x,4x,5x,6x,8x,10x,12x,16x,20x,24x,40x
+            'InterpolationFactor': 20,  # 1x,2x,3x,4x,5x,6x,8x,10x,12x,16x,20x,24x,40x
             'NyquistZone': 1,
             'UpdateEvent': xrfdc.EVENT_MIXER,
         }
@@ -156,12 +156,12 @@ class RfDataConverter:
         }
 
         self.adc_tile_config = {
-            'PLLFreq': 409.6,
+            'RefClkMhz': 500.0,
             'SampleFreqMhz': adc_samp_rate / 1e6,  # On-chip PLL ranges from 500M-2.5G
             'SampleFreqGHz': adc_samp_rate / 1e9,
         }
         self.adc_block_config = {
-            'DecimationFactor': 2,  # 1x,2x,3x,4x,5x,6x,8x,10x,12x,16x,20x,24x,40x
+            'DecimationFactor': 20,  # 1x,2x,3x,4x,5x,6x,8x,10x,12x,16x,20x,24x,40x
             'NyquistZone': 1,
             'UpdateEvent': xrfdc.EVENT_MIXER,
         }
@@ -216,9 +216,9 @@ class RfDataConverter:
         """Configure DAC tiles."""
         for tile in self.dac_tiles:
             if self.rfdc_status.get_dac_tile_enb(tile.tile_id):
-                # Configure clock a single tile
+                # Configure a single tile
                 tile.DynamicPLLConfig(
-                    self.clock_src, self.dac_tile_config['PLLFreq'], self.dac_tile_config['SampleFreqMhz'])
+                    self.clock_src, self.dac_tile_config['RefClkMhz'], self.dac_tile_config['SampleFreqMhz'])
                 time.sleep(1)
                 tile.SetupFIFO(True)
                 # Check tile state
@@ -243,7 +243,7 @@ class RfDataConverter:
             if self.rfdc_status.get_adc_tile_enb(tile.tile_id):
                 # Configure a single tile
                 tile.DynamicPLLConfig(
-                    self.clock_src, self.adc_tile_config['PLLFreq'], self.adc_tile_config['SampleFreqMhz'])
+                    self.clock_src, self.adc_tile_config['RefClkMhz'], self.adc_tile_config['SampleFreqMhz'])
                 time.sleep(1)
                 tile.SetupFIFO(True)
                 # Check tile state
