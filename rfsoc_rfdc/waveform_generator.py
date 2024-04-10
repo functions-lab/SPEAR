@@ -108,6 +108,13 @@ class WaveFormGenerator:
         return wave.astype(RfDataConverterType.DATA_PATH_DTYPE)
 
     @staticmethod
+    def generate_binary_wave(repeat_time=1, sample_pts=1000):
+        num_of_samples = repeat_time * sample_pts
+        wave = np.tile([0, 1], num_of_samples // 2 + 1)[:num_of_samples]
+        wave *= RfDataConverterType.DAC_MAX_SCALE
+        return wave.astype(RfDataConverterType.DATA_PATH_DTYPE)
+
+    @staticmethod
     def generate_zadoff_chu_wave(repeat_time=1, sample_pts=1000):
         u = 1  # Root index of the the ZC sequence
         seq_length = sample_pts * repeat_time
