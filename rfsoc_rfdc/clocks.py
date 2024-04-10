@@ -123,24 +123,29 @@ def _program_custom_lmclks(clk_props):
         xrfclk.xrfclk._write_LMX_regs(clk_props['lmx']['reg'], lmx)
 
 
-def set_custom_lmclks():
+def set_custom_lmclks(lmk_loc=None, lmx_loc=None):
     """Populate LMK and LMX clocks. Search for clock files.
     Obtain the properties of the clock files. Program the
-    LMK and LMX clocks with the properties of the files.
+    LMK and LMX clocks with the propertides of the files.
     """
 
     # Ensure LMK and LMX devices are known
     _get_lmclk_devices()
 
-    # Get custom ref clock locs
-    cwd = os.path.dirname(os.path.realpath(__file__))
-    lmk_loc, lmx_loc = _get_custom_lmclks(cwd)
-
-    logging.info(f"Searching for LMK clock configs in {lmk_loc}")
-    logging.info(f"Searching for LMX clock configs in {lmx_loc}")
+    if lmk_loc is None and lmx_loc is None:
+        # Get custom ref clock locs
+        cwd = os.path.dirname(os.path.realpath(__file__))
+        lmk_loc, lmx_loc = _get_custom_lmclks(cwd)
 
     # Get custom ref clock props
     clk_props = _get_custom_lmclk_props(lmk_loc, lmx_loc)
+
+    lmk_props, lmx_props = clk_props['lmk'], clk_props['lmx']
+
+    logging.info(
+        f"Configuring LMK chip using file {lmk_props['file']} at {lmk_props['freq']} MHz")
+    logging.info(
+        f"Configuring LMX chip using file {lmx_props['file']} at {lmx_props['freq']} MHz")
 
     # Program custom ref clocks
     _program_custom_lmclks(clk_props)
