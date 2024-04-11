@@ -7,30 +7,9 @@ from .rfdc import RfDataConverterType
 class WaveFormGenerator:
     """
     A class that generates different types of waveforms.
-
-    Attributes:
-        amplitude (int): The amplitude of the waveforms.
-
-    Methods:
-        generate_sine_wave: Generates a sine wave.
-        generate_square_wave: Generates a square wave.
-        generate_triangle_wave: Generates a triangle wave.
-        generate_sawtooth_wave: Generates a sawtooth wave.
-        generate_cosine_wave: Generates a cosine wave.
     """
-
     @staticmethod
     def generate_sine_wave(repeat_time=1, sample_pts=1000):
-        """
-        Generates a sine wave.
-
-        Args:
-            repeat_time (float): The time period of the waveform.
-            sample_pts (int): The number of sample points.
-
-        Returns:
-            numpy.ndarray: The generated sine wave.
-        """
         t = np.linspace(0, repeat_time, int(
             sample_pts * repeat_time), endpoint=False)
         wave = np.sin(2 * np.pi * t) * RfDataConverterType.DAC_MAX_SCALE
@@ -38,16 +17,6 @@ class WaveFormGenerator:
 
     @staticmethod
     def generate_square_wave(repeat_time=1, sample_pts=1000):
-        """
-        Generates a square wave.
-
-        Args:
-            repeat_time (float): The time period of the waveform.
-            sample_pts (int): The number of sample points.
-
-        Returns:
-            numpy.ndarray: The generated square wave.
-        """
         t = np.linspace(0, repeat_time, int(
             sample_pts * repeat_time), endpoint=False)
         wave = np.sign(np.sin(2 * np.pi * t)) * \
@@ -56,16 +25,6 @@ class WaveFormGenerator:
 
     @staticmethod
     def generate_triangle_wave(repeat_time=1, sample_pts=1000):
-        """
-        Generates a triangle wave.
-
-        Args:
-            repeat_time (float): The time period of the waveform.
-            sample_pts (int): The number of sample points.
-
-        Returns:
-            numpy.ndarray: The generated triangle wave.
-        """
         t = np.linspace(0, repeat_time, int(
             sample_pts * repeat_time), endpoint=False)
         wave = 2 * np.abs(2 * (t - np.floor(t + 0.5))) - 1
@@ -74,16 +33,6 @@ class WaveFormGenerator:
 
     @staticmethod
     def generate_sawtooth_wave(repeat_time=1, sample_pts=1000):
-        """
-        Generates a sawtooth wave.
-
-        Args:
-            repeat_time (float): The time period of the waveform.
-            sample_pts (int): The number of sample points.
-
-        Returns:
-            numpy.ndarray: The generated sawtooth wave.
-        """
         t = np.linspace(0, repeat_time, int(
             sample_pts * repeat_time), endpoint=False)
         wave = 2 * (t - np.floor(0.5 + t))
@@ -92,23 +41,13 @@ class WaveFormGenerator:
 
     @staticmethod
     def generate_cosine_wave(repeat_time=1, sample_pts=1000):
-        """
-        Generates a cosine wave.
-
-        Args:
-            repeat_time (float): The time period of the waveform.
-            sample_pts (int): The number of sample points.
-
-        Returns:
-            numpy.ndarray: The generated cosine wave.
-        """
         t = np.linspace(0, repeat_time, int(
             sample_pts * repeat_time), endpoint=False)
         wave = np.cos(2 * np.pi * t) * RfDataConverterType.DAC_MAX_SCALE
         return wave.astype(RfDataConverterType.DATA_PATH_DTYPE)
 
     @staticmethod
-    def generate_binary_wave(repeat_time=1, sample_pts=1000):
+    def generate_binary_seq(repeat_time=1, sample_pts=1000):
         num_of_samples = repeat_time * sample_pts
         wave = np.tile([0, 1], num_of_samples // 2 + 1)[:num_of_samples]
         wave *= RfDataConverterType.DAC_MAX_SCALE
@@ -146,16 +85,6 @@ class WaveFormGenerator:
 
     @staticmethod
     def generate_no_wave(repeat_time=1, sample_pts=1000):
-        """
-        Generates a nothing wave.
-
-        Args:
-            repeat_time (float): The time period of the waveform.
-            sample_pts (int): The number of sample points.
-
-        Returns:
-            numpy.ndarray: The generated cosine wave.
-        """
         wave = np.zeros(sample_pts * repeat_time)
         return wave.astype(RfDataConverterType.DATA_PATH_DTYPE)
 

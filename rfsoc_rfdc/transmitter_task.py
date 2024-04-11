@@ -59,9 +59,15 @@ class TransmitterTask(OverlayTask):
 
         # Generate I/Q samples for a tone
         # self.i_samples = WaveFormGenerator.generate_sine_wave(
-        #     repeat_time=1000, sample_pts=10000)
+        #     repeat_time=1000, sample_pts=1000)
         # self.q_samples = WaveFormGenerator.generate_no_wave(
-        #     repeat_time=1000, sample_pts=10000)
+        #     repeat_time=1000, sample_pts=1000)
+
+        # Generate binary sequence
+        # self.i_samples = WaveFormGenerator.generate_binary_seq(
+        #     repeat_time=1000, sample_pts=1000)
+        # self.q_samples = WaveFormGenerator.generate_no_wave(
+        #     repeat_time=1000, sample_pts=1000)
 
         # Generate I/Q samples for a Zadoff-Chu sequence
         # self.i_samples, self.q_samples = WaveFormGenerator.generate_zadoff_chu_wave(
