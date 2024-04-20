@@ -37,9 +37,9 @@ class Real2IqRxChannel:
         self.debug_mode = debug_mode
 
     def transfer(self):
-        """
-        Manages the data reception from the ADC, including handling FIFO statuses and DMA transfer.
-        """
+        # Clear buffer
+        self.rx_buff *= 0
+
         if self.debug_mode:
             fifo_count = self.rx_dma.get_fifo_count()
 
@@ -55,9 +55,6 @@ class Real2IqRxChannel:
         self.rx_dma.transfer(self.rx_buff)
 
     def wait(self):
-        """
-        Waits for the DMA transfer to complete.
-        """
         self.rx_dma.wait()
 
     @property
