@@ -4,20 +4,19 @@ from .adc_data_plotter import AdcDataPlotter
 from pynq.lib import AxiGPIO
 # Don't skip this! You need this line of have PacketGenerator to work
 from .packet_generator import PacketGenerator
-import time
 
 
 class ReceiverTask(OverlayTask):
-    def __init__(self, overlay, buffer_size=1024):
+    def __init__(self, overlay, samples_per_axis_stream=8, fifo_size=1024):
         super().__init__(overlay, name="ReceiverTask")
-        self.buffer_size = buffer_size
-
+        self.fifo_size = fifo_size
+        self.samples_per_axis_stream = samples_per_axis_stream
         # Hardware IPs
         self.t226_dma_ips = [
             self.ol.adc_datapath.t226_adc0.axi_dma
         ]
         self.t226_pkt_generator_ips = [
-            self.ol.adc_datapath.t226_adc0.axis_packet_generator
+            self.ol.adc_datapath.t226_adc0.adc_packet_generator
         ]
         self.t226_fifo_count_ips = [
             AxiGPIO(
@@ -33,17 +32,19 @@ class ReceiverTask(OverlayTask):
                     channel_id=ch_idx,
                     dma_ip=self.t226_dma_ips[ch_idx],
                     fifo_count_ip=self.t226_fifo_count_ips[ch_idx],
-                    buff_size=self.buffer_size,
+                    buff_size=self.fifo_size * self.samples_per_axis_stream,
                     debug_mode=True
                 )
             )
 
         # Initialize plotter
         self.plotter = AdcDataPlotter()
+        self.plotter.config_title()
 
     def run(self):
         for pkg_gen in self.t226_pkt_generator_ips:
-            pkg_gen.packetsize = 128
+            # Pull all samples from FIFO
+            pkg_gen.packetsize = (self.fifo_size - 1)
         pkg_gen.enable()
 
         while True:
@@ -52,17 +53,5 @@ class ReceiverTask(OverlayTask):
             self.t226_rx_channels[0].wait()
             i_data = self.t226_rx_channels[0].i_data
             q_data = self.t226_rx_channels[0].q_data
-            # # Update the plot with I/Q data
+            # Update the plot with I/Q data
             self.plotter.update_plot(i_data, q_data)
-
-            pkg_count_ip = AxiGPIO(
-                self.ol.ip_dict['adc_datapath/t226_adc0/fifo_count']).channel2
-
-            counter = pkg_count_ip.read()
-
-            pkt_gen_ip = self.ol.adc_datapath.t226_adc0.axis_packet_generator
-            count, status = pkt_gen_ip._count, pkt_gen_ip.status()
-            print(
-                f"accumulate count {count}, status {status}, counter {counter}")
-
-            time.sleep(1)
