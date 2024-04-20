@@ -6,6 +6,7 @@ from pynq.lib import AxiGPIO
 import numpy as np
 from .rfdc import RfDataConverterType
 from .matlab_iq_loader import MatlabIqLoader
+import time
 
 
 class TransmitterTask(OverlayTask):
@@ -24,12 +25,15 @@ class TransmitterTask(OverlayTask):
         self.mode = "repeater"  # or "real_time"
         # Hardware IPs
         self.t230_dma_ips = [
-            self.ol.dac_datapath.t230_dac0.axi_dma
+            self.ol.dac_datapath.t230_dac0.axi_dma,
+            self.ol.dac_datapath.t230_dac2.axi_dma
         ]
 
         self.t230_fifo_count_ips = [
             AxiGPIO(
-                self.ol.ip_dict['dac_datapath/t230_dac0/fifo_count']).channel1
+                self.ol.ip_dict['dac_datapath/t230_dac0/fifo_count']).channel1,
+            AxiGPIO(
+                self.ol.ip_dict['dac_datapath/t230_dac2/fifo_count']).channel1
         ]
 
         # Initialize Tx channels
@@ -91,7 +95,9 @@ class TransmitterTask(OverlayTask):
         # Perform multi-channel transmission
         if self.mode == "repeater":
             while True:
-                self.t230_tx_channels[0].transfer()
-                self.t230_tx_channels[0].wait()
+                for dma in self.t230_tx_channels:
+                    dma.transfer()
+                for dma in self.t230_tx_channels:
+                    dma.wait()
         else:
             raise ValueError(f"Unrecognized mode: {self.mode}")
