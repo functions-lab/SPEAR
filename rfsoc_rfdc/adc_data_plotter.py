@@ -50,6 +50,9 @@ class AdcDataPlotter:
             q_data (array-like): The new Q data to update the plot with.
             display_ratio (float): The ratio of data to display. Defaults to 1.0, which displays all data.
         """
+        if display_ratio <= 0.0 or display_ratio > 1.0:
+            raise (
+                f"display_ratio shall be a floating number between 0.0 and 1.0 while you enter {display_ratio}")
         window_size = int(len(i_data) * display_ratio)
         self.fig.data[0].x = np.arange(0, window_size, 1)
         self.fig.data[0].y = i_data[0:window_size]
