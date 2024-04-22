@@ -272,8 +272,8 @@ class RfDataConverter:
                 # Configure a single block
                 block.NyquistZone = self.dac_block_config['NyquistZone']
                 block.MixerSettings = self.dac_block_mixer_config
-                block.UpdateEvent(self.dac_block_config['UpdateEvent'])
                 block.InterpolationFactor = self.dac_block_config['InterpolationFactor']
+                block.UpdateEvent(self.dac_block_config['UpdateEvent'])
                 logging.info(
                     f"DAC tile {tile.tile_id} DAC block {block_id} is enabled!")
             else:
@@ -291,8 +291,8 @@ class RfDataConverter:
                 # Configure a single block
                 block.NyquistZone = self.adc_block_config['NyquistZone']
                 block.MixerSettings = self.adc_block_mixer_config
-                block.UpdateEvent(self.adc_block_config['UpdateEvent'])
                 block.DecimationFactor = self.adc_block_config['DecimationFactor']
+                block.UpdateEvent(self.adc_block_config['UpdateEvent'])
                 logging.info(
                     f"ADC tile {tile.tile_id} ADC block {block_id} is enabled!")
             else:
