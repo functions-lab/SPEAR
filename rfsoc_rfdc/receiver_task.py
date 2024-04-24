@@ -36,7 +36,7 @@ class ReceiverTask(OverlayTask):
             self.ol.adc_datapath.t226_adc0.axi_dma
         ]
         self.t226_pkt_generator_ips = [
-            self.ol.adc_datapath.t226_adc0.adc_packet_generator_0
+            self.ol.adc_datapath.t226_adc0.adc_packet_generator
         ]
         self.t226_fifo_count_ips = [
             AxiGPIO(
