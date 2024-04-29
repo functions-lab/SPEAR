@@ -1,10 +1,9 @@
 from .overlay_task import OverlayTask
-from .real2iq_rx_channel import Real2IqRxChannel
+from .rx_channel_real2iq import RxChannelReal2Iq
 from .adc_data_plotter import AdcDataPlotter
 from pynq.lib import AxiGPIO
 # Don't skip this! You need this line of have PacketGenerator to work
 from .packet_generator import PacketGenerator
-from enum import Enum
 
 
 class ReceiverTask(OverlayTask):
@@ -49,7 +48,7 @@ class ReceiverTask(OverlayTask):
         for ch_idx, _ in enumerate(self.t226_dma_ips):
             buffer_margin = 50  # Magic number! Necessary
             self.t226_rx_channels.append(
-                Real2IqRxChannel(
+                RxChannelReal2Iq(
                     channel_id=ch_idx,
                     dma_ip=self.t226_dma_ips[ch_idx],
                     fifo_count_ip=self.t226_fifo_count_ips[ch_idx],

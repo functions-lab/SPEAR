@@ -1,7 +1,7 @@
 from .waveform_generator import WaveFormGenerator
 
 from .overlay_task import OverlayTask
-from .iq2real_tx_channel import Iq2RealTxChannel
+from .tx_channel_iq2real import TxChannelIq2Real
 from pynq.lib import AxiGPIO
 import numpy as np
 from .rfdc import RfDataConverterType
@@ -41,7 +41,7 @@ class TransmitterTask(OverlayTask):
 
         for ch_idx, _ in enumerate(self.t230_dma_ips):
             self.t230_tx_channels.append(
-                Iq2RealTxChannel(
+                TxChannelIq2Real(
                     channel_id=ch_idx,
                     dma_ip=self.t230_dma_ips[ch_idx],
                     fifo_count_ip=self.t230_fifo_count_ips[ch_idx],
