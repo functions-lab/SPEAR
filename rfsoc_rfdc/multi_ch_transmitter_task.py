@@ -4,6 +4,7 @@ from .overlay_task import OverlayTask
 from .tx_channel import TxChannel
 from pynq.lib import AxiGPIO
 import numpy as np
+import time
 
 from .rfdc import RfDataConverterType
 
@@ -12,6 +13,9 @@ class MultiChannelTransmitterTask(OverlayTask):
 
     def __init__(self, overlay, channel_count=4):
         super().__init__(overlay, name="MultiChannelTransmitterTask")
+        # Running counter
+        self.timer = []
+        # Number of DACs controlled by a DAC
         self.channel_count = channel_count
         # Hardware IPs
         self.channel_dma = [
@@ -65,7 +69,19 @@ class MultiChannelTransmitterTask(OverlayTask):
 
         # Perform multi-channel transmission
         while True:
+            t = time.time_ns()
             for dma in self.tx_channels:
                 dma.transfer()
             for dma in self.tx_channels:
                 dma.wait()
+            elapse = time.time_ns() - t
+            self.timer.append(elapse)
+
+            # Calculate average time
+            if len(self.timer) > 1000:
+                # Only get the last 3 samples
+                avg_time = np.mean(self.timer[-3:]) / 10**9
+                freq = 1 / avg_time
+                print(
+                    f"[MultiChannelTransmitterTask] Average time (s): {avg_time:.3f}, freq (hz) {freq:.3f}")
+                self.timer = []

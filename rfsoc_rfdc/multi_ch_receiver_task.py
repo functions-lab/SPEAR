@@ -5,11 +5,14 @@ from pynq.lib import AxiGPIO
 # Don't skip this! You need this line of have PacketGenerator to work
 from .packet_generator import PacketGenerator
 import time
+import numpy as np
 
 
 class MultiChannelReceiverTask(OverlayTask):
     def __init__(self, overlay, samples_per_axis_stream=8, fifo_size=32768):
         super().__init__(overlay, name="MultiChannelReceiverTask")
+        # Running counter
+        self.timer = []
         # Receiver datapath parameters
         self.fifo_size = fifo_size
         self.samples_per_axis_stream = samples_per_axis_stream
@@ -59,13 +62,25 @@ class MultiChannelReceiverTask(OverlayTask):
             pkg_gen.enable()
 
         while True:
+            t = time.time_ns()
             # Receive data and convert to I/Q format
             for dma in self.rx_channels:
                 dma.transfer()
             for dma in self.rx_channels:
                 dma.wait()
+            elapse = time.time_ns() - t
+            self.timer.append(elapse)
+
+            # Calculate average time
+            if len(self.timer) > 1000:
+                # Only get the last 3 samples
+                avg_time = np.mean(self.timer[-3:]) / 10**9
+                freq = 1 / avg_time
+                print(
+                    f"[MultiChannelReceiverTask] Average time (s): {avg_time:.3f}, freq (hz) {freq:.3f}")
+                self.timer = []
 
             # Data plotting
-            for ch in self.rx_channels:
-                data = ch.data
+            # for ch in self.rx_channels:
+            #     data = ch.data
                 # self.plotter.update_plot(i_data, q_data, display_ratio=0.1)
