@@ -19,13 +19,11 @@ class MultiChannelTransmitterTask(OverlayTask):
         self.channel_count = channel_count
         # Hardware IPs
         self.channel_dma = [
-            self.ol.dac_datapath.t230.axi_dma,
-            self.ol.dac_datapath.t231.axi_dma
+            self.ol.dac_datapath.t230.axi_dma
         ]
 
         self.channel_fifo_count_ip = [
-            AxiGPIO(self.ol.ip_dict['dac_datapath/t230/fifo_count']).channel1,
-            AxiGPIO(self.ol.ip_dict['dac_datapath/t231/fifo_count']).channel1
+            AxiGPIO(self.ol.ip_dict['dac_datapath/t230/fifo_count']).channel1
         ]
 
         self.tx_channels = []

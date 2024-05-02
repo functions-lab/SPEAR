@@ -24,18 +24,14 @@ class MultiChannelReceiverTask(OverlayTask):
 
         # Hardware IPs
         self.channel_dma = [
-            self.ol.adc_datapath.t226.axi_dma,
-            self.ol.adc_datapath.t227.axi_dma
+            self.ol.adc_datapath.t226.axi_dma
         ]
         self.channel_pkt_generator_ip = [
-            self.ol.adc_datapath.t226.adc_packet_generator,
-            self.ol.adc_datapath.t227.adc_packet_generator
+            self.ol.adc_datapath.t226.adc_packet_generator
         ]
         self.channel_fifo_count_ip = [
             AxiGPIO(
-                self.ol.ip_dict['adc_datapath/t226/fifo_count']).channel1,
-            AxiGPIO(
-                self.ol.ip_dict['adc_datapath/t227/fifo_count']).channel1
+                self.ol.ip_dict['adc_datapath/t226/fifo_count']).channel1
         ]
 
         # Initialize Rx channels
