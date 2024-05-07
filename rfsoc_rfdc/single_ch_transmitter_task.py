@@ -9,7 +9,7 @@ from .matlab_iq_loader import MatlabIqLoader
 import time
 
 
-class TransmitterTask(OverlayTask):
+class SingleChannelTransmitterTask(OverlayTask):
     """
     A class representing a transmitter task.
 
@@ -18,32 +18,29 @@ class TransmitterTask(OverlayTask):
     """
 
     def __init__(self, overlay, file_path="./wifi_wave.mat"):
-        super().__init__(overlay, name="TransmitterTask")
+        super().__init__(overlay, name="SingleChannelTransmitterTask")
         # Waveform file name
         self.file_path = file_path
         # Operating mode
         self.mode = "repeater"  # or "real_time"
         # Hardware IPs
-        self.t230_dma_ips = [
-            self.ol.dac_datapath.t230_dac0.axi_dma,
-            self.ol.dac_datapath.t230_dac2.axi_dma
+        self.dma_ip = [
+            self.ol.dac_datapath.t230.axi_dma
         ]
 
         self.t230_fifo_count_ips = [
             AxiGPIO(
-                self.ol.ip_dict['dac_datapath/t230_dac0/fifo_count']).channel1,
-            AxiGPIO(
-                self.ol.ip_dict['dac_datapath/t230_dac2/fifo_count']).channel1
+                self.ol.ip_dict['dac_datapath/t230/fifo_count']).channel1
         ]
 
         # Initialize Tx channels
-        self.t230_tx_channels = []
+        self.tx_channels = []
 
-        for ch_idx, _ in enumerate(self.t230_dma_ips):
-            self.t230_tx_channels.append(
+        for ch_idx, _ in enumerate(self.dma_ip):
+            self.tx_channels.append(
                 TxChannelIq2Real(
                     channel_id=ch_idx,
-                    dma_ip=self.t230_dma_ips[ch_idx],
+                    dma_ip=self.dma_ip[ch_idx],
                     fifo_count_ip=self.t230_fifo_count_ips[ch_idx],
                     debug_mode=True
                 )
@@ -89,15 +86,13 @@ class TransmitterTask(OverlayTask):
         """
 
         # Perform data copy
-        for tx_ch in self.t230_tx_channels:
+        for tx_ch in self.tx_channels:
             tx_ch.data_copy(i_buff=self.i_samples, q_buff=self.q_samples)
 
         # Perform multi-channel transmission
         if self.mode == "repeater":
             while True:
-                for dma in self.t230_tx_channels:
-                    dma.transfer()
-                for dma in self.t230_tx_channels:
-                    dma.wait()
+                self.tx_channels[0].transfer()
+                self.tx_channels[0].wait()
         else:
             raise ValueError(f"Unrecognized mode: {self.mode}")

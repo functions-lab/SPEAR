@@ -8,15 +8,15 @@ import time
 import numpy as np
 
 
-class MultiChannelReceiverTask(OverlayTask):
+class MultiChannelSingleChannelReceiverTask(OverlayTask):
     def __init__(self, overlay, samples_per_axis_stream=8, fifo_size=32768):
-        super().__init__(overlay, name="MultiChannelReceiverTask")
+        super().__init__(overlay, name="MultiChannelSingleChannelReceiverTask")
         # Running counter
         self.timer = []
         # Receiver datapath parameters
         self.fifo_size = fifo_size
         self.samples_per_axis_stream = samples_per_axis_stream
-        self.packet_size_ratio = 0.66
+        self.packet_size_ratio = 0.1
         self.packet_size = int(self.fifo_size * self.packet_size_ratio)
         # Initialize plotter
         self.plotter = AdcDataPlotter()
@@ -73,10 +73,13 @@ class MultiChannelReceiverTask(OverlayTask):
                 avg_time = np.mean(self.timer[-3:]) / 10**9
                 freq = 1 / avg_time
                 print(
-                    f"[MultiChannelReceiverTask] Average time (s): {avg_time:.3f}, freq (hz) {freq:.3f}")
+                    f"[MultiChannelSingleChannelReceiverTask] Average time (s): {avg_time:.3f}, freq (hz) {freq:.3f}")
                 self.timer = []
 
-            # Data plotting
-            # for ch in self.rx_channels:
-            #     data = ch.data
-                # self.plotter.update_plot(i_data, q_data, display_ratio=0.1)
+            self.rx_channels[0].transfer()
+            self.rx_channels[0].wait()
+
+            # Data plotting (Plot 1 channel only)
+            q_data = self.rx_channels[0].data[0::4]
+            i_data = self.rx_channels[0].data[1::4]
+            self.plotter.update_plot(i_data, q_data, display_ratio=0.5)
