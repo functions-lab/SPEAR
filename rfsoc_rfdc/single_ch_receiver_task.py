@@ -1,34 +1,27 @@
 from .overlay_task import OverlayTask
 from .rx_channel_real2iq import RxChannelReal2Iq
 from .adc_data_plotter import AdcDataPlotter
+# from .adc_fft_plotter import AdcFFTPlotter
 from pynq.lib import AxiGPIO
+import numpy as np
 # Don't skip this! You need this line of have PacketGenerator to work
 from .packet_generator import PacketGenerator
 
 
-class SingleChannelReceiverTask(OverlayTask):
-    """
-    A class representing the receiver task for RFSoC RFDC.
+class SingleChReceiverTask(OverlayTask):
+    """Single channel ADC"""
 
-    Attributes:
-        overlay (Overlay): The overlay object.
-        samples_per_axis_stream (int): The number of samples per axis stream.
-        fifo_size (int): The size of the FIFO.
-        packet_size_ratio (float): The ratio of the packet size to the FIFO size.
-        packet_size (int): The size of each packet.
-        plotter (AdcDataPlotter): The plotter object for ADC data.
-    """
-
-    def __init__(self, overlay, samples_per_axis_stream=8, fifo_size=1024):
-        super().__init__(overlay, name="SingleChannelReceiverTask")
+    def __init__(self, overlay, samples_per_axis_stream=8, fifo_size=32768):
+        super().__init__(overlay, name="SingleChReceiverTask")
         # Receiver datapath parameters
         self.fifo_size = fifo_size
         self.samples_per_axis_stream = samples_per_axis_stream
         self.packet_size_ratio = 0.66
         self.packet_size = int(self.fifo_size * self.packet_size_ratio)
         # Initialize plotter
-        self.plotter = AdcDataPlotter()
-        self.plotter.config_title()
+        self.sample_plotter = AdcDataPlotter()
+        self.sample_plotter.config_title()
+        # self.fft_plotter = AdcFFTPlotter(sample_rate=100e6)
 
         # Hardware IPs
         self.dma_ip = [
@@ -69,5 +62,7 @@ class SingleChannelReceiverTask(OverlayTask):
             self.rx_channels[0].wait()
             i_data = self.rx_channels[0].i_data
             q_data = self.rx_channels[0].q_data
+
             # Update the plot with I/Q data, plot only 10% of captured data
-            self.plotter.update_plot(i_data, q_data, display_ratio=0.1)
+            self.sample_plotter.update_plot(i_data, q_data, display_ratio=0.1)
+            # self.fft_plotter.update_plot(i_data, q_data)

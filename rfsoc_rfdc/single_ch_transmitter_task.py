@@ -55,14 +55,14 @@ class SingleChannelTransmitterTask(OverlayTask):
         range_min, range_max = RfDataConverterType.DAC_MIN_SCALE, RfDataConverterType.DAC_MAX_SCALE
 
         # Scale the waveform
-        self.matlab_loader.scale_waveform(range_min, range_max)
-        self.i_samples, self.q_samples = self.matlab_loader.get_iq_samples()
+        # self.matlab_loader.scale_waveform(range_min, range_max)
+        # self.i_samples, self.q_samples = self.matlab_loader.get_iq_samples()
 
         # Generate I/Q samples for a tone
-        # self.i_samples = WaveFormGenerator.generate_sine_wave(
-        #     repeat_time=1000, sample_pts=1000)
-        # self.q_samples = WaveFormGenerator.generate_no_wave(
-        #     repeat_time=1000, sample_pts=1000)
+        self.i_samples = WaveFormGenerator.generate_sine_wave(
+            repeat_time=100000, sample_pts=10)
+        self.q_samples = WaveFormGenerator.generate_no_wave(
+            repeat_time=100000, sample_pts=10)
 
         # Generate binary sequence
         # self.i_samples = WaveFormGenerator.generate_binary_seq(

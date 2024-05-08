@@ -8,9 +8,11 @@ import time
 import numpy as np
 
 
-class MultiChannelSingleChannelReceiverTask(OverlayTask):
+class MultiChReceiverTask(OverlayTask):
+    """Multi-channel ADC"""
+
     def __init__(self, overlay, samples_per_axis_stream=8, fifo_size=32768):
-        super().__init__(overlay, name="MultiChannelSingleChannelReceiverTask")
+        super().__init__(overlay, name="MultiChReceiverTask")
         # Running counter
         self.timer = []
         # Receiver datapath parameters
@@ -73,7 +75,7 @@ class MultiChannelSingleChannelReceiverTask(OverlayTask):
                 avg_time = np.mean(self.timer[-3:]) / 10**9
                 freq = 1 / avg_time
                 print(
-                    f"[MultiChannelSingleChannelReceiverTask] Average time (s): {avg_time:.3f}, freq (hz) {freq:.3f}")
+                    f"[MultiChReceiverTask] Average time (s): {avg_time:.3f}, freq (hz) {freq:.3f}")
                 self.timer = []
 
             self.rx_channels[0].transfer()
