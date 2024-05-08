@@ -1,3 +1,6 @@
+# Saved numpy array
+*.npy
+
 *.bit
 *.hwh
 # Byte-compiled / optimized / DLL files
