@@ -1,7 +1,7 @@
 from .overlay_task import OverlayTask
 from .rx_channel_real2iq import RxChannelReal2Iq
 from .adc_data_plotter import AdcDataPlotter
-# from .adc_fft_plotter import AdcFFTPlotter
+from .adc_fft_plotter import AdcFFTPlotter
 from pynq.lib import AxiGPIO
 import numpy as np
 # Don't skip this! You need this line of have PacketGenerator to work
@@ -21,7 +21,7 @@ class SingleChReceiverTask(OverlayTask):
         # Initialize plotter
         self.sample_plotter = AdcDataPlotter()
         self.sample_plotter.config_title()
-        # self.fft_plotter = AdcFFTPlotter(sample_rate=100e6)
+        self.fft_plotter = AdcFFTPlotter(sample_rate=100e6)
 
         # Hardware IPs
         self.dma_ip = [
@@ -64,5 +64,5 @@ class SingleChReceiverTask(OverlayTask):
             q_data = self.rx_channels[0].q_data
 
             # Update the plot with I/Q data, plot only 10% of captured data
-            self.sample_plotter.update_plot(i_data, q_data, display_ratio=0.1)
-            # self.fft_plotter.update_plot(i_data, q_data)
+            # self.sample_plotter.update_plot(i_data, q_data, display_ratio=0.1)
+            self.fft_plotter.update_plot(i_data, q_data)
