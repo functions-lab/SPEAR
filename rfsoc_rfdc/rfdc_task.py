@@ -1,6 +1,6 @@
 from .clocks import set_custom_lmclks
 from .overlay_task import OverlayTask
-from .rfdc import RfDataConverter
+from rfsoc_rfdc.rfdc import RfDataConverter
 
 
 class RfdcTask(OverlayTask):

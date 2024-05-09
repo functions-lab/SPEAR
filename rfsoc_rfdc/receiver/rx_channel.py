@@ -1,32 +1,11 @@
-import time
-import numpy as np
 import logging
-from .dma_monitor import RxDmaMonitor
+from rfsoc_rfdc.dma_monitor import RxDmaMonitor
 from pynq import allocate
-from .rfdc import RfDataConverterType
+from rfsoc_rfdc.rfdc import RfDataConverterType
 
 
-class Real2IqRxChannel:
-    """
-    A class representing a real to I/Q reception channel on a Quad RF-ADC (gen 3).
-    It handles data format conversion, buffer management, and reception control.
-
-    Attributes:
-        channel_id (int): Identifier for the reception channel.
-        rx_buff (numpy.ndarray): Buffer for holding the received data.
-        rx_dma (RxDmaMonitor): DMA monitor object for managing data transfers.
-        warning_cnt (int): Counter for the number of warnings issued.
-
-    Args:
-        channel_id (int): Identifier for the reception channel.
-        dma_ip: DMA IP.
-        fifo_count_ip: AXI GPIO IP for FIFO count.
-    """
-
+class RxChannel:
     def __init__(self, channel_id, dma_ip, fifo_count_ip, buff_size=1024, debug_mode=False):
-        """
-        Initializes the Real2IqRxChannel with specified channel ID and hardware IPs.
-        """
         self.channel_id = channel_id
         self.rx_buff_size = buff_size
         self.rx_buff = allocate(shape=(self.rx_buff_size,),
@@ -58,9 +37,5 @@ class Real2IqRxChannel:
         self.rx_dma.wait()
 
     @property
-    def i_data(self):
-        return self.rx_buff[0::2]  # Even indices
-
-    @property
-    def q_data(self):
-        return self.rx_buff[1::2]  # Odd indices
+    def data(self):
+        return self.rx_buff

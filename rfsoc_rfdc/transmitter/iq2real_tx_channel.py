@@ -1,14 +1,14 @@
 import time
 import numpy as np
 import logging
-from .dma_monitor import TxDmaMonitor
+from rfsoc_rfdc.dma_monitor import TxDmaMonitor
 from pynq import allocate
-from .rfdc import RfDataConverterType
+from rfsoc_rfdc.rfdc import RfDataConverterType
 
 
 class Iq2RealTxChannel:
     """
-    A class representing a I/Q to read transmission channel on a Quad RF-DAC (gen 3).
+    A class representing a iq to read transmission channel on a Quad RF-DAC (gen 3).
     It handles data format checking, copy data to buffer, and transmission control.
 
     Attributes:

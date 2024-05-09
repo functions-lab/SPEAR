@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .rfdc import RfDataConverterType
+from rfsoc_rfdc.rfdc import RfDataConverterType
 
 
 class WaveFormGenerator:

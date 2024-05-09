@@ -1,8 +1,8 @@
 import numpy as np
 import logging
-from .dma_monitor import TxDmaMonitor
+from rfsoc_rfdc.dma_monitor import TxDmaMonitor
 from pynq import allocate
-from .rfdc import RfDataConverterType
+from rfsoc_rfdc.rfdc import RfDataConverterType
 
 
 class TxChannel:

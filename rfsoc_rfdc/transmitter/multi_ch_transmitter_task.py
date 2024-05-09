@@ -1,31 +1,27 @@
-from .waveform_generator import WaveFormGenerator
-
-from .overlay_task import OverlayTask
+from rfsoc_rfdc.throughput_timer import ThroughputTimer
+from rfsoc_rfdc.waveform_generator import WaveFormGenerator
+from rfsoc_rfdc.overlay_task import OverlayTask
 from .tx_channel import TxChannel
 from pynq.lib import AxiGPIO
 import numpy as np
 import time
 
-from .rfdc import RfDataConverterType
-
-
-class MultiChannelTransmitterTask(OverlayTask):
+class MultiChTransmitterTask(OverlayTask):
 
     def __init__(self, overlay, channel_count=4):
-        super().__init__(overlay, name="MultiChannelTransmitterTask")
-        # Running counter
-        self.timer = []
-        # Number of DACs controlled by a DAC
+        super().__init__(overlay, name="MultiChTransmitterTask")
+        # Throughput timer
+        self.timer = ThroughputTimer()
+        # Number of DACs controlled by a DMA
         self.channel_count = channel_count
         # Hardware IPs
         self.channel_dma = [
             self.ol.dac_datapath.t230.axi_dma
         ]
-
         self.channel_fifo_count_ip = [
             AxiGPIO(self.ol.ip_dict['dac_datapath/t230/fifo_count']).channel1
         ]
-
+        # Initialize Tx channels
         self.tx_channels = []
 
         for ch_idx, _ in enumerate(self.channel_dma):
@@ -38,7 +34,7 @@ class MultiChannelTransmitterTask(OverlayTask):
                 )
             )
 
-        # Generate I/Q samples for a tone
+        # Generate iq samples for a tone
         q_samples = WaveFormGenerator.generate_sine_wave(
             repeat_time=1000, sample_pts=1000)
         i_samples = WaveFormGenerator.generate_no_wave(
@@ -65,21 +61,17 @@ class MultiChannelTransmitterTask(OverlayTask):
         for tx_ch in self.tx_channels:
             tx_ch.data_copy(self.multi_ch_iq_samples)
 
-        # Perform multi-channel transmission
         while True:
+            # Start timer
             t = time.time_ns()
+            # Transfer iq samples for each channel
             for dma in self.tx_channels:
                 dma.transfer()
             for dma in self.tx_channels:
                 dma.wait()
+            # End timer
             elapse = time.time_ns() - t
             self.timer.append(elapse)
-
-            # Calculate average time
+            # Calculate average DMA transfer time
             if len(self.timer) > 1000:
-                # Only get the last 3 samples
-                avg_time = np.mean(self.timer[-3:]) / 10**9
-                freq = 1 / avg_time
-                print(
-                    f"[MultiChannelTransmitterTask] Average time (s): {avg_time:.3f}, freq (hz) {freq:.3f}")
-                self.timer = []
+                self.timer.get_throughput()
