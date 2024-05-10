@@ -3,7 +3,7 @@ from rfsoc_rfdc.overlay_task import OverlayTask
 from rfsoc_rfdc.transmitter.tx_channel_iq2real import TxChannelIq2Real
 from pynq.lib import AxiGPIO
 import numpy as np
-from rfsoc_rfdc.rfdc import RfDataConverterType
+from rfsoc_rfdc.rfdc import MyRFdcType
 from rfsoc_rfdc.matlab_iq_loader import MatlabIqLoader
 
 class SingleChTransmitterTask(OverlayTask):
@@ -40,11 +40,8 @@ class SingleChTransmitterTask(OverlayTask):
             file_path=self.file_path, key="wave")
         self.matlab_loader.load_matlab_waveform()
 
-        # Set the range for full scale
-        range_min, range_max = RfDataConverterType.DAC_MIN_SCALE, RfDataConverterType.DAC_MAX_SCALE
-
         # Scale the waveform
-        self.matlab_loader.scale_waveform(range_min, range_max)
+        self.matlab_loader.scale_waveform(MyRFdcType.DAC_MIN_SCALE, MyRFdcType.DAC_MAX_SCALE)
         self.i_samples, self.q_samples = self.matlab_loader.get_iq_samples()
 
         # Generate iq samples for a tone

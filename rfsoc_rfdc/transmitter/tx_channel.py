@@ -2,7 +2,7 @@ import numpy as np
 import logging
 from rfsoc_rfdc.dma_monitor import TxDmaMonitor
 from pynq import allocate
-from rfsoc_rfdc.rfdc import RfDataConverterType
+from rfsoc_rfdc.rfdc import MyRFdcType
 
 
 class TxChannel:
@@ -18,14 +18,14 @@ class TxChannel:
         # Validations for input buffers
         if not isinstance(buff, np.ndarray):
             raise TypeError("buff must be of type numpy.ndarray")
-        if buff.dtype != RfDataConverterType.DATA_PATH_DTYPE:
+        if buff.dtype != MyRFdcType.DATA_PATH_DTYPE:
             raise TypeError("buff must be of data type numpy.int16")
 
     def data_copy(self, buff):
         self.data_type_check(buff)
         # Buffer copy
         self.tx_buff = allocate(shape=(buff.size,),
-                                dtype=RfDataConverterType.DATA_PATH_DTYPE)
+                                dtype=MyRFdcType.DATA_PATH_DTYPE)
         self.tx_buff[:] = buff[:]
 
     def transfer(self):

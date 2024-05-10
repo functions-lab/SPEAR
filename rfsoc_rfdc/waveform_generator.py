@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from rfsoc_rfdc.rfdc import RfDataConverterType
+from rfsoc_rfdc.rfdc import MyRFdcType
 
 
 class WaveFormGenerator:
@@ -12,46 +12,46 @@ class WaveFormGenerator:
     def generate_sine_wave(repeat_time=1, sample_pts=1000):
         t = np.linspace(0, repeat_time, int(
             sample_pts * repeat_time), endpoint=False)
-        wave = np.sin(2 * np.pi * t) * RfDataConverterType.DAC_MAX_SCALE
-        return wave.astype(RfDataConverterType.DATA_PATH_DTYPE)
+        wave = np.sin(2 * np.pi * t) * MyRFdcType.DAC_MAX_SCALE
+        return wave.astype(MyRFdcType.DATA_PATH_DTYPE)
 
     @staticmethod
     def generate_square_wave(repeat_time=1, sample_pts=1000):
         t = np.linspace(0, repeat_time, int(
             sample_pts * repeat_time), endpoint=False)
         wave = np.sign(np.sin(2 * np.pi * t)) * \
-            RfDataConverterType.DAC_MAX_SCALE
-        return wave.astype(RfDataConverterType.DATA_PATH_DTYPE)
+            MyRFdcType.DAC_MAX_SCALE
+        return wave.astype(MyRFdcType.DATA_PATH_DTYPE)
 
     @staticmethod
     def generate_triangle_wave(repeat_time=1, sample_pts=1000):
         t = np.linspace(0, repeat_time, int(
             sample_pts * repeat_time), endpoint=False)
         wave = 2 * np.abs(2 * (t - np.floor(t + 0.5))) - 1
-        wave *= RfDataConverterType.DAC_MAX_SCALE
-        return wave.astype(RfDataConverterType.DATA_PATH_DTYPE)
+        wave *= MyRFdcType.DAC_MAX_SCALE
+        return wave.astype(MyRFdcType.DATA_PATH_DTYPE)
 
     @staticmethod
     def generate_sawtooth_wave(repeat_time=1, sample_pts=1000):
         t = np.linspace(0, repeat_time, int(
             sample_pts * repeat_time), endpoint=False)
         wave = 2 * (t - np.floor(0.5 + t))
-        wave *= RfDataConverterType.DAC_MAX_SCALE
-        return wave.astype(RfDataConverterType.DATA_PATH_DTYPE)
+        wave *= MyRFdcType.DAC_MAX_SCALE
+        return wave.astype(MyRFdcType.DATA_PATH_DTYPE)
 
     @staticmethod
     def generate_cosine_wave(repeat_time=1, sample_pts=1000):
         t = np.linspace(0, repeat_time, int(
             sample_pts * repeat_time), endpoint=False)
-        wave = np.cos(2 * np.pi * t) * RfDataConverterType.DAC_MAX_SCALE
-        return wave.astype(RfDataConverterType.DATA_PATH_DTYPE)
+        wave = np.cos(2 * np.pi * t) * MyRFdcType.DAC_MAX_SCALE
+        return wave.astype(MyRFdcType.DATA_PATH_DTYPE)
 
     @staticmethod
     def generate_binary_seq(repeat_time=1, sample_pts=1000):
         num_of_samples = repeat_time * sample_pts
         wave = np.tile([0, 1], num_of_samples // 2 + 1)[:num_of_samples]
-        wave *= RfDataConverterType.DAC_MAX_SCALE
-        return wave.astype(RfDataConverterType.DATA_PATH_DTYPE)
+        wave *= MyRFdcType.DAC_MAX_SCALE
+        return wave.astype(MyRFdcType.DATA_PATH_DTYPE)
 
     @staticmethod
     def generate_zadoff_chu_wave(repeat_time=1, sample_pts=1000):
@@ -74,19 +74,19 @@ class WaveFormGenerator:
         n = np.arange(seq_length)
         zcseq = np.exp(-1j * np.pi * u * n * (n+cf+2.*q) / seq_length)
 
-        zcseq_real = np.real(zcseq) * RfDataConverterType.DAC_MAX_SCALE
+        zcseq_real = np.real(zcseq) * MyRFdcType.DAC_MAX_SCALE
         zcseq_real = zcseq_real.astype(
-            RfDataConverterType.DATA_PATH_DTYPE)
-        zcseq_imag = np.imag(zcseq) * RfDataConverterType.DAC_MAX_SCALE
+            MyRFdcType.DATA_PATH_DTYPE)
+        zcseq_imag = np.imag(zcseq) * MyRFdcType.DAC_MAX_SCALE
         zcseq_imag = zcseq_imag.astype(
-            RfDataConverterType.DATA_PATH_DTYPE)
+            MyRFdcType.DATA_PATH_DTYPE)
 
         return zcseq_real, zcseq_imag
 
     @staticmethod
     def generate_no_wave(repeat_time=1, sample_pts=1000):
         wave = np.zeros(sample_pts * repeat_time)
-        return wave.astype(RfDataConverterType.DATA_PATH_DTYPE)
+        return wave.astype(MyRFdcType.DATA_PATH_DTYPE)
 
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-from rfsoc_rfdc.rfdc import RfDataConverterType
+from rfsoc_rfdc.rfdc import MyRFdcType
 from pynq import allocate
 from rfsoc_rfdc.transmitter.tx_channel import TxChannel
 
@@ -17,7 +17,7 @@ class TxChannelIq2Real(TxChannel):
         self.data_type_check(q_buff)
         # Buffer copy
         self.tx_buff = allocate(shape=(i_buff.size+q_buff.size,),
-                                dtype=RfDataConverterType.DATA_PATH_DTYPE)
+                                dtype=MyRFdcType.DATA_PATH_DTYPE)
         # iq samples shall be interleaved, i samples for even indices and q samples for odd indices
         self.tx_buff[0::2] = i_buff  
         self.tx_buff[1::2] = q_buff

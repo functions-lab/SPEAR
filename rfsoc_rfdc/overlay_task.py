@@ -1,7 +1,7 @@
 import numpy as np
 import threading
 from abc import ABC, abstractmethod
-from .rfsoc_overlay import RFSoCOverlay
+from rfsoc_rfdc.rfsoc_overlay import RFSoCOverlay
 from pynq import allocate
 import os
 import time

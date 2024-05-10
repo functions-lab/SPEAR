@@ -3,7 +3,7 @@ import numpy as np
 import logging
 from rfsoc_rfdc.dma_monitor import TxDmaMonitor
 from pynq import allocate
-from rfsoc_rfdc.rfdc import RfDataConverterType
+from rfsoc_rfdc.rfdc import MyRFdcType
 
 
 class Iq2RealTxChannel:
@@ -36,15 +36,15 @@ class Iq2RealTxChannel:
         if not isinstance(i_buff, np.ndarray) or \
                 not isinstance(q_buff, np.ndarray):
             raise TypeError("i/q_buff must be of type numpy.ndarray")
-        if i_buff.dtype != RfDataConverterType.DATA_PATH_DTYPE or \
-                q_buff.dtype != RfDataConverterType.DATA_PATH_DTYPE:
+        if i_buff.dtype != MyRFdcType.DATA_PATH_DTYPE or \
+                q_buff.dtype != MyRFdcType.DATA_PATH_DTYPE:
             raise TypeError("i/q_buff must be of data type numpy.int16")
         if i_buff.size != q_buff.size:
             raise ValueError("i/q_buff must have the same size")
 
         # Buffer copy
         self.tx_buff = allocate(shape=(2*i_buff.size,),
-                                dtype=RfDataConverterType.DATA_PATH_DTYPE)
+                                dtype=MyRFdcType.DATA_PATH_DTYPE)
         self.tx_buff[0::2] = i_buff  # Even indices
         self.tx_buff[1::2] = q_buff  # Odd indices
 

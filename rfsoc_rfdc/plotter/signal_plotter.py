@@ -1,13 +1,13 @@
 import plotly.graph_objs as go
 import numpy as np
-from rfsoc_rfdc.rfdc import RfDataConverterType
+from rfsoc_rfdc.rfdc import MyRFdcType
 from IPython.display import display
 
 class SignalPlotter:
     """Base class for plotting ADC samples in the time domain.
     """
     def __init__(self, title, auto_range=False):
-        range_min, range_max = RfDataConverterType.DAC_MIN_SCALE, RfDataConverterType.DAC_MAX_SCALE
+        range_min, range_max = MyRFdcType.DAC_MIN_SCALE, MyRFdcType.DAC_MAX_SCALE
 
         self.fig = go.FigureWidget(layout={
             'title': title,

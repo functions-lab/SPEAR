@@ -3,7 +3,7 @@ import numpy as np
 import logging
 from rfsoc_rfdc.dma_monitor import RxDmaMonitor
 from pynq import allocate
-from rfsoc_rfdc.rfdc import RfDataConverterType
+from rfsoc_rfdc.rfdc import MyRFdcType
 
 
 class Real2IqRxChannel:
@@ -14,7 +14,7 @@ class Real2IqRxChannel:
         self.channel_id = channel_id
         self.rx_buff_size = buff_size
         self.rx_buff = allocate(shape=(self.rx_buff_size,),
-                                dtype=RfDataConverterType.DATA_PATH_DTYPE)
+                                dtype=MyRFdcType.DATA_PATH_DTYPE)
         self.rx_dma = RxDmaMonitor(dma_ip=dma_ip,
                                    fifo_count_ip=fifo_count_ip)
         self.warning_cnt = 0
