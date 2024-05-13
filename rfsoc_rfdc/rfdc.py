@@ -5,26 +5,7 @@ import time
 
 from xrfdc import RFdcDacTile, RFdcAdcTile
 
-ZCU216_CONFIG = {
-    "DeviceName": "ZCU216",
-
-    # These constraints are derived from Table 144 in Xilinx's DS926 Zynq UltraScale+ RFSoC Data Sheet: DC and AC Switching Characteristics.
-    "RefClockForPLLMin": 102.40625,
-    "RefClockForPLLMax": 615.0,
-    "RefClockNoPLLDacMin": 500.0,
-    "RefClockNoPLLDacMax": 10000.0,
-    "RefClockNoPLLAdcMin": 500.0,
-    "RefClockNoPLLAdcMax": 2500.0,
-
-    # Current config
-    "RefClockForPLL": 500.0,
-    "DACSampleRate": 2000.0,
-    "DACInterpolationRate": 20,
-    "DACNCO": 1000.0,
-    "ADCSampleRate": 2000.0,
-    "ADCInterpolationRate": 20,
-    "ADCNCO": -1000.0
-}
+from rfsoc_rfdc.rfdc_config import ZCU216_CONFIG
 
 
 class MyRFdcStatus:

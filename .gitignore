@@ -1,3 +1,6 @@
+# rfdc config 
+./rfsoc_rfdc/rfdc_config.py
+
 # Saved numpy array
 *.npy
 
