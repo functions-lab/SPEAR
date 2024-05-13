@@ -4,7 +4,7 @@ import scipy.io
 
 
 class MatlabIqLoader:
-    def __init__(self, file_path='./wave.mat', key='wave'):
+    def __init__(self, file_path, key='wave'):
         self.file_path = file_path
         self.key = key
         self.wave = None
@@ -41,5 +41,7 @@ class MatlabIqLoader:
         self.i_samples = np.squeeze(self.i_samples)
         self.q_samples = np.squeeze(self.q_samples)
 
-    def get_iq_samples(self):
+    def get_iq_samples(self, repeat_times=1):
+        if isinstance(repeat_times, int) and repeat_times != 1:
+            return np.tile(self.i_samples, repeat_times), np.tile(self.q_samples, repeat_times)
         return self.i_samples, self.q_samples
