@@ -72,7 +72,7 @@ class MultiChReceiverTask(OverlayTask):
                 dma.wait()
             # End timer
             elapse = time.time_ns() - t
-            self.timer.udpate(elapse)
+            self.timer.update(elapse)
             # Calculate average DMA transfer time
             if update_counter > 1000:
                 update_counter = 0
