@@ -6,6 +6,7 @@ import numpy as np
 from rfsoc_rfdc.rfdc import MyRFdcType
 from rfsoc_rfdc.matlab_iq_loader import MatlabIqLoader
 
+
 class SingleChTransmitterTask(OverlayTask):
     """Single-Channel DAC"""
 
@@ -41,7 +42,8 @@ class SingleChTransmitterTask(OverlayTask):
         self.matlab_loader.load_matlab_waveform()
 
         # Scale the waveform
-        self.matlab_loader.scale_waveform(MyRFdcType.DAC_MIN_SCALE, MyRFdcType.DAC_MAX_SCALE)
+        self.matlab_loader.scale_waveform(
+            MyRFdcType.DAC_MIN_SCALE, MyRFdcType.DAC_MAX_SCALE)
         self.i_samples, self.q_samples = self.matlab_loader.get_iq_samples()
 
         # Generate iq samples for a tone
@@ -65,7 +67,7 @@ class SingleChTransmitterTask(OverlayTask):
         for tx_ch in self.tx_channels:
             tx_ch.data_copy(i_buff=self.i_samples, q_buff=self.q_samples)
 
-        while True: 
+        while True:
             # Initiate DMA transfer
             self.tx_channels[0].transfer()
             self.tx_channels[0].wait()

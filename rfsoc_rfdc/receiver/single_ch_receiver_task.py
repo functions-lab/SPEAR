@@ -1,7 +1,7 @@
 from rfsoc_rfdc.overlay_task import OverlayTask
 from rfsoc_rfdc.receiver.rx_channel_real2iq import RxChannelReal2Iq
-from rfsoc_rfdc.plotter.signal_plotter import ComplexSignalPlotter  
-from rfsoc_rfdc.plotter.fft_plotter import FFTPlotter  
+from rfsoc_rfdc.plotter.signal_plotter import ComplexSignalPlotter
+from rfsoc_rfdc.plotter.fft_plotter import FFTPlotter
 from pynq.lib import AxiGPIO
 import numpy as np
 # Don't skip this! You need this line of have PacketGenerator to work

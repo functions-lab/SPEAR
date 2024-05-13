@@ -10,6 +10,7 @@ class Real2IqRxChannel:
     """
     A real to iq reception channel on a Quad RF-ADC (gen 3).
     """
+
     def __init__(self, channel_id, dma_ip, fifo_count_ip, buff_size=1024, debug_mode=False):
         self.channel_id = channel_id
         self.rx_buff_size = buff_size
@@ -41,8 +42,8 @@ class Real2IqRxChannel:
     def wait(self):
         self.rx_dma.wait()
 
-
     # TODO: Check if this is correcet! ADC shall sent samples in Q/iq/I ... format
+
     @property
     def data(self):
         # Real samples in even indices and imag samples in odd indices

@@ -3,9 +3,11 @@ import numpy as np
 from rfsoc_rfdc.rfdc import MyRFdcType
 from IPython.display import display
 
+
 class SignalPlotter:
     """Base class for plotting ADC samples in the time domain.
     """
+
     def __init__(self, title, auto_range=False):
         range_min, range_max = MyRFdcType.DAC_MIN_SCALE, MyRFdcType.DAC_MAX_SCALE
 
@@ -21,12 +23,15 @@ class SignalPlotter:
         display(self.fig)
 
     def update_plot(self, data, plot_ratio=1.0):
-        raise NotImplementedError("This method should be overridden by subclasses")
+        raise NotImplementedError(
+            "This method should be overridden by subclasses")
+
 
 class RealSignalPlotter(SignalPlotter):
     """
     Plot real ADC samples in the time domain
     """
+
     def __init__(self, auto_range=False):
         super().__init__('Real Signal Plot', auto_range)
         self.fig.add_scattergl(x=[], y=[], name='Real Samples')
@@ -36,10 +41,12 @@ class RealSignalPlotter(SignalPlotter):
         self.fig.data[0].x = np.arange(0, window_size, 1)
         self.fig.data[0].y = data[0:window_size]
 
+
 class ComplexSignalPlotter(SignalPlotter):
     """
     Plot complex ADC samples in the time domain
     """
+
     def __init__(self, auto_range=False):
         super().__init__('Complex Signal Plot', auto_range)
         self.fig.add_scattergl(x=[], y=[], name='Real Samples')

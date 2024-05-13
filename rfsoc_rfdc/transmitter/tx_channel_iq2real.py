@@ -7,6 +7,7 @@ class TxChannelIq2Real(TxChannel):
     """
     A iq to real Tx channel.
     """
+
     def __init__(self, channel_id, dma_ip, fifo_count_ip, debug_mode=False):
         super().__init__(channel_id, dma_ip, fifo_count_ip, debug_mode)
 
@@ -19,5 +20,5 @@ class TxChannelIq2Real(TxChannel):
         self.tx_buff = allocate(shape=(i_buff.size+q_buff.size,),
                                 dtype=MyRFdcType.DATA_PATH_DTYPE)
         # iq samples shall be interleaved, i samples for even indices and q samples for odd indices
-        self.tx_buff[0::2] = i_buff  
+        self.tx_buff[0::2] = i_buff
         self.tx_buff[1::2] = q_buff

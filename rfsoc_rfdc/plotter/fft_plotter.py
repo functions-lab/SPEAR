@@ -11,15 +11,15 @@ class FFTPlotter:
     def __init__(self, sample_rate):
         self.sample_rate = sample_rate
         self.fig = go.FigureWidget(layout={
-            'title':'FFT Magnitude Plot',
-            'xaxis':{'title': 'Frequency (Hz)'},
-            'yaxis':{'title': 'Magnitude'}
+            'title': 'FFT Magnitude Plot',
+            'xaxis': {'title': 'Frequency (Hz)'},
+            'yaxis': {'title': 'Magnitude'}
         })
-        self.fig.add_scattergl(x=[], y=[], name='Magnitude')        
+        self.fig.add_scattergl(x=[], y=[], name='Magnitude')
         display(self.fig)
 
     def update_plot(self, iq_data):
-        iq_fft = fft(iq_data)  
+        iq_fft = fft(iq_data)
         freq = fftfreq(len(iq_data), d=1/self.sample_rate)
         magnitude = np.abs(iq_fft)
         self.fig.data[0].x = freq

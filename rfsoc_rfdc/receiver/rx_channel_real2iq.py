@@ -5,6 +5,7 @@ class RxChannelReal2Iq(RxChannel):
     """
     A real to iq Rx channel.
     """
+
     def __init__(self, channel_id, dma_ip, fifo_count_ip, buff_size=1024, debug_mode=False):
         super().__init__(channel_id, dma_ip, fifo_count_ip, buff_size, debug_mode)
 

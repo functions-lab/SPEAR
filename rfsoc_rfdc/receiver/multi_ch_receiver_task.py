@@ -1,8 +1,8 @@
 from rfsoc_rfdc.throughput_timer import ThroughputTimer
 from rfsoc_rfdc.overlay_task import OverlayTask
 from .rx_channel import RxChannel
-from rfsoc_rfdc.plotter.signal_plotter import ComplexSignalPlotter 
-from rfsoc_rfdc.plotter.fft_plotter import FFTPlotter   
+from rfsoc_rfdc.plotter.signal_plotter import ComplexSignalPlotter
+from rfsoc_rfdc.plotter.fft_plotter import FFTPlotter
 from pynq.lib import AxiGPIO
 # Don't skip this! You need this line of have PacketGenerator to work
 from rfsoc_rfdc.receiver.packet_generator import PacketGenerator
