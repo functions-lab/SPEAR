@@ -66,7 +66,7 @@ class MultiChTransmitterTask(OverlayTask):
         #     repeat_time=1000, sample_pts=1000)
 
         self.multi_ch_iq_samples = self.gen_multi_ch_iq_layout(
-            q_samples, i_samples)
+            q_samples, i_samples, repeat_times=self.channel_count)
 
     def gen_multi_ch_iq_layout(self, q_samples, i_samples, repeat_times=4):
         multi_ch_q = np.repeat(q_samples, repeat_times)
