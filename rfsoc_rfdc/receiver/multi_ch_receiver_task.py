@@ -79,8 +79,8 @@ class MultiChReceiverTask(OverlayTask):
                 self.timer.get_throughput()
             update_counter = update_counter + 1
             # Only fetch iq samples for the first channel
-            q_data = self.rx_channels[0].data[0::4]
-            i_data = self.rx_channels[0].data[1::4]
+            q_data = self.rx_channels[0].data[0::self.channel_count*2]
+            i_data = self.rx_channels[0].data[1::self.channel_count*2]
             iq_data = i_data + 1j * q_data
             # Plot only the first channel
             self.complex_plotter.update_plot(iq_data, plot_ratio=0.1)
