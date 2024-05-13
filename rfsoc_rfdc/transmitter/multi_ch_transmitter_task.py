@@ -62,6 +62,7 @@ class MultiChTransmitterTask(OverlayTask):
         for tx_ch in self.tx_channels:
             tx_ch.data_copy(self.multi_ch_iq_samples)
 
+        update_counter = 0
         while True:
             # Start timer
             t = time.time_ns()
@@ -74,5 +75,7 @@ class MultiChTransmitterTask(OverlayTask):
             elapse = time.time_ns() - t
             self.timer.update(elapse)
             # Calculate average DMA transfer time
-            if len(self.timer) > 1000:
+            if update_counter > 1000:
+                update_counter = 0
                 self.timer.get_throughput()
+            update_counter = update_counter + 1
