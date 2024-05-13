@@ -25,7 +25,8 @@ class MultiChReceiverTask(OverlayTask):
         self.packet_size_ratio = 0.66
         self.packet_size = int(self.fifo_size * self.packet_size_ratio)
         # Initialize plotter
-        self.complex_plotter = ComplexSignalPlotter()
+        # self.complex_plotter = ComplexSignalPlotter()
+        # self.fft_plotter = FFTPlotter(sample_rate=300e6)
         # Hardware IPs
         self.channel_dma = [
             self.ol.adc_datapath.t226.axi_dma
@@ -83,4 +84,6 @@ class MultiChReceiverTask(OverlayTask):
             i_data = self.rx_channels[0].data[1::self.channel_count*2]
             iq_data = i_data + 1j * q_data
             # Plot only the first channel
-            self.complex_plotter.update_plot(iq_data, plot_ratio=0.1)
+            # self.complex_plotter.update_plot(iq_data, plot_ratio=0.1)
+            # Update the FFT plotter
+            # self.fft_plotter.update_plot(iq_data)
