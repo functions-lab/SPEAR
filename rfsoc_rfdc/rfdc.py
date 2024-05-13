@@ -290,6 +290,20 @@ class MyRFdc:
             logging.info(
                 f"ADC tile {tile.tile_id} ({tile.tile_phy_id}) is fully powered up!")
 
+    def config_dac_nco(self, tile, block_id, nco_freq):
+        """Configure the NCO freq of a DAC block"""
+        block_enabled = self.rfdc_status.get_dac_block_enb(
+            tile.tile_id, block_id)
+        if block_enabled:
+            block = tile.blocks[block_id]
+            block.MixerSettings['Freq'] = nco_freq
+            block.UpdateEvent(xrfdc.EVENT_MIXER)
+            logging.info(
+                f"DAC tile {tile.tile_id} DAC block {block_id} NCO frequency is set to {nco_freq} Hz!")
+        else:
+            raise (
+                f"DAC tile {tile.tile_id} DAC block {block_id} is NOT enabled! NCO cannot be set.")
+
     def config_dac_block(self, tile, block_id):
         """Configure a single DAC block within a tile."""
         block_enabled = self.rfdc_status.get_dac_block_enb(
@@ -310,6 +324,20 @@ class MyRFdc:
         """Configure all DAC blocks within a tile."""
         for block_id in range(len(tile.blocks)):
             self.config_dac_block(tile, block_id)
+
+    def config_adc_nco(self, tile, block_id, nco_freq):
+        """Configure the NCO freq of an ADC block"""
+        block_enabled = self.rfdc_status.get_adc_block_enb(
+            tile.tile_id, block_id)
+        if block_enabled:
+            block = tile.blocks[block_id]
+            block.MixerSettings['Freq'] = nco_freq
+            block.UpdateEvent(xrfdc.EVENT_MIXER)
+            logging.info(
+                f"ADC tile {tile.tile_id} ADC block {block_id} NCO frequency is set to {nco_freq} Hz!")
+        else:
+            raise (
+                f"ADC tile {tile.tile_id} ADC block {block_id} is NOT enabled! NCO cannot be set.")
 
     def config_adc_block(self, tile, block_id):
         """Configure a single ADC block within a tile."""
