@@ -301,7 +301,7 @@ class MyRFdc:
             logging.info(
                 f"DAC tile {tile.tile_id} DAC block {block_id} NCO frequency is set to {nco_freq} Hz!")
         else:
-            raise (
+            raise Exception(
                 f"DAC tile {tile.tile_id} DAC block {block_id} is NOT enabled! NCO cannot be set.")
 
     def config_dac_block(self, tile, block_id):
@@ -336,7 +336,7 @@ class MyRFdc:
             logging.info(
                 f"ADC tile {tile.tile_id} ADC block {block_id} NCO frequency is set to {nco_freq} Hz!")
         else:
-            raise (
+            raise Exception(
                 f"ADC tile {tile.tile_id} ADC block {block_id} is NOT enabled! NCO cannot be set.")
 
     def config_adc_block(self, tile, block_id):
