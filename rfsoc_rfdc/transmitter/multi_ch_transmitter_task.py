@@ -6,6 +6,9 @@ from pynq.lib import AxiGPIO
 import numpy as np
 import time
 
+from rfsoc_rfdc.rfdc import MyRFdcType
+from rfsoc_rfdc.matlab_iq_loader import MatlabIqLoader
+
 
 class MultiChTransmitterTask(OverlayTask):
 
@@ -35,16 +38,31 @@ class MultiChTransmitterTask(OverlayTask):
                 )
             )
 
+        # Initialize MatlabIqLoader
+        self.matlab_loader = MatlabIqLoader(
+            file_path="./wave_files/wifi_wave.mat", key="wave")
+        self.matlab_loader.load_matlab_waveform()
+
+        # Scale the waveform
+        self.matlab_loader.scale_waveform(
+            MyRFdcType.DAC_MIN_SCALE, MyRFdcType.DAC_MAX_SCALE)
+        i_samples, q_samples = self.matlab_loader.get_iq_samples(
+            repeat_times=40)
+
         # Generate iq samples for a tone
-        q_samples = WaveFormGenerator.generate_sine_wave(
-            repeat_time=1000, sample_pts=1000)
-        i_samples = WaveFormGenerator.generate_no_wave(
-            repeat_time=1000, sample_pts=1000)
+        # q_samples = WaveFormGenerator.generate_sine_wave(
+        #     repeat_time=1000, sample_pts=1000)
+        # i_samples = WaveFormGenerator.generate_no_wave(
+        #     repeat_time=1000, sample_pts=1000)
 
         # Generate binary sequence
         # q_samples = WaveFormGenerator.generate_binary_seq(
         #     repeat_time=1000, sample_pts=1000)
         # i_samples = WaveFormGenerator.generate_binary_seq(
+        #     repeat_time=1000, sample_pts=1000)
+
+        # Generate iq samples for a Zadoff-Chu sequence
+        # i_samples, q_samples = WaveFormGenerator.generate_zadoff_chu_wave(
         #     repeat_time=1000, sample_pts=1000)
 
         self.multi_ch_iq_samples = self.gen_multi_ch_iq_layout(
