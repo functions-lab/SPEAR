@@ -6,6 +6,7 @@ from pynq.lib import AxiGPIO
 import numpy as np
 import time
 
+
 class MultiChTransmitterTask(OverlayTask):
 
     def __init__(self, overlay, channel_count=4):
@@ -71,7 +72,7 @@ class MultiChTransmitterTask(OverlayTask):
                 dma.wait()
             # End timer
             elapse = time.time_ns() - t
-            self.timer.append(elapse)
+            self.timer.update(elapse)
             # Calculate average DMA transfer time
             if len(self.timer) > 1000:
                 self.timer.get_throughput()
