@@ -12,24 +12,24 @@ ZCU216_MIN_MAX_CONFIG = {
     "RefClockNoPLLAdcMax": 2500.0
 }
 
-ZCU216_MULTI_BAND_CONFIG = {
-    "RefClockForPLL": 300.0,
-    "DACSampleRate": 6000.0,
+ZCU216_DEMO2_CONFIG = {
+    "RefClockForPLL": 500.0,
+    "DACSampleRate": 5000.0,
     "DACInterpolationRate": 20,
-    "DACNCO": 0,
-    "ADCSampleRate": 2400.0,
-    "ADCInterpolationRate": 8,
-    "ADCNCO": 0
+    "DACNCO": 175,
+    "ADCSampleRate": 2500.0,
+    "ADCInterpolationRate": 10,
+    "ADCNCO": -175
 }
 
-ZCU216_MULTI_CH_CONFIG = {
+ZCU216_DEMO1_CONFIG = {
     "RefClockForPLL": 500.0,
     "DACSampleRate": 2000.0,
     "DACInterpolationRate": 20,
-    "DACNCO": 0,
+    "DACNCO": 500,
     "ADCSampleRate": 2000.0,
     "ADCInterpolationRate": 20,
-    "ADCNCO": 0
+    "ADCNCO": -500
 }
 
-ZCU216_CONFIG = merge_dict(ZCU216_MIN_MAX_CONFIG, ZCU216_MULTI_BAND_CONFIG)
+ZCU216_CONFIG = merge_dict(ZCU216_MIN_MAX_CONFIG, ZCU216_DEMO1_CONFIG)

@@ -198,6 +198,24 @@ class MyRFdc:
         """Shutdown RF data converters safely."""
         self.shutdown_tiles()
 
+    def set_nco(self):
+        # Additional configuration for DAC NCO
+        dac_nco_mhz = ZCU216_CONFIG['DACNCO']
+        dac_nco_offset = ZCU216_CONFIG['DACSampleRate'] / \
+            ZCU216_CONFIG['DACInterpolationRate'] + 10
+        tile = self.dac_tiles[2]
+        for block_id in [0, 1, 2, 3]:
+            dac_nco_mhz += dac_nco_offset
+            self.config_dac_nco(tile, block_id, dac_nco_mhz)
+        # Additional configuration for ADC NCO
+        adc_nco_mhz = ZCU216_CONFIG['ADCNCO']
+        adc_nco_offset = ZCU216_CONFIG['ADCSampleRate'] / \
+            ZCU216_CONFIG['ADCInterpolationRate'] + 10
+        tile = self.adc_tiles[2]
+        for block_id in [0, 1, 2, 3]:
+            adc_nco_mhz -= adc_nco_offset
+            self.config_adc_nco(tile, block_id, adc_nco_mhz)
+
     def init_setup(self):
         """Power on DAC/ADC tiles and configure DAC/ADC blocks"""
         # Power on DAC tiles
@@ -206,28 +224,14 @@ class MyRFdc:
         # Configure DAC blocks within each tile
         for tile in self.dac_tiles:
             self.config_dac_blocks(tile)
-        # Additional configuration for DAC NCO
-        dac_nco_mhz = ZCU216_CONFIG['DACNCO']
-        dac_nco_offset = ZCU216_CONFIG['DACSampleRate'] / \
-            ZCU216_CONFIG['DACInterpolationRate']
-        tile = self.dac_tiles[2]
-        for block_id in [0, 1, 2, 3]:
-            dac_nco_mhz += dac_nco_offset
-            self.config_dac_nco(tile, block_id, dac_nco_mhz)
         # Power on ADC tiles
         for tile in self.adc_tiles:
             self.power_on_adc_tile(tile)
         # Configure ADC blocks within each tile
         for tile in self.adc_tiles:
             self.config_adc_blocks(tile)
-        # Additional configuration for ADC NCO
-        adc_nco_mhz = ZCU216_CONFIG['ADCNCO']
-        adc_nco_offset = ZCU216_CONFIG['ADCSampleRate'] / \
-            ZCU216_CONFIG['ADCInterpolationRate']
-        tile = self.adc_tiles[2]
-        for block_id in [0, 1, 2, 3]:
-            adc_nco_mhz -= adc_nco_offset
-            self.config_adc_nco(tile, block_id, adc_nco_mhz)
+        # Customly set DAC/ADC NCO
+        # self.set_nco()
 
     def shutdown_tiles(self):
         """Safely shutdown all tiles."""
