@@ -44,7 +44,8 @@ class SingleChTransmitterTask(OverlayTask):
         # Scale the waveform
         self.matlab_loader.scale_waveform(
             MyRFdcType.DAC_MIN_SCALE, MyRFdcType.DAC_MAX_SCALE)
-        self.i_samples, self.q_samples = self.matlab_loader.get_iq_samples()
+        self.i_samples, self.q_samples = self.matlab_loader.get_iq_samples(
+            repeat_times=40)
 
         # Generate iq samples for a tone
         # self.i_samples = WaveFormGenerator.generate_sine_wave(
