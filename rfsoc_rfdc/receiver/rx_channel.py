@@ -23,12 +23,12 @@ class RxChannel:
             fifo_count = self.rx_dma.get_fifo_count()
 
             # Warning for low FIFO count
-            if fifo_count == 0:
+            if fifo_count > self.rx_buff_size:
                 self.warning_cnt += 1
             if self.warning_cnt > 1000:
                 self.warning_cnt = 0
                 logging.info(
-                    f"[Channel {self.channel_id}] Warning: Rx FIFO count {fifo_count} is zero. DMA transfer is too slow!")
+                    f"[Channel {self.channel_id}] Warning: Rx FIFO count {fifo_count} is larger than buffer size {self.rx_buff_size}. DMA transfer is too slow!")
 
         # Trigger DMA transfer
         self.rx_dma.transfer(self.rx_buff)
