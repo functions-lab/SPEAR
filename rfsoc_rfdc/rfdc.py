@@ -12,38 +12,47 @@ class MyRFdcStatus:
     """Status of RF Data Converter"""
 
     def __init__(self, overlay):
-        self.dac_tiles_status = overlay.usp_rf_data_converter.IPStatus['DACTileStatus']
-        self.adc_tiles_status = overlay.usp_rf_data_converter.IPStatus['ADCTileStatus']
+        self.rfdc = overlay.usp_rf_data_converter
+        self.dac_tile_status = self.rfdc.IPStatus['DACTileStatus']
+        self.adc_tile_status = self.rfdc.IPStatus['ADCTileStatus']
+        self.dac_clk_dist_status = self.rfdc.ClkDistribution['DAC']
+        self.adc_clk_dist_status = self.rfdc.ClkDistribution['ADC']
 
     def get_dac_tile_enb(self, tile_id):
-        return self.dac_tiles_status[tile_id]['IsEnabled']
+        return self.dac_tile_status[tile_id]['IsEnabled']
 
     def get_dac_tile_state(self, tile_id):
-        return self.dac_tiles_status[tile_id]['TileState']
+        return self.dac_tile_status[tile_id]['TileState']
 
     def get_dac_powerup_state(self, tile_id):
-        return self.dac_tiles_status[tile_id]['PowerUpState']
+        return self.dac_tile_status[tile_id]['PowerUpState']
 
     def get_dac_pll_state(self, tile_id):
-        return self.dac_tiles_status[tile_id]['PLLState']
+        return self.dac_tile_status[tile_id]['PLLState']
 
     def get_dac_block_enb(self, tile_id, block_id):
-        return self.dac_tiles_status[tile_id]['BlockStatusMask'] & (1 << block_id)
+        return self.dac_tile_status[tile_id]['BlockStatusMask'] & (1 << block_id)
+
+    def get_dac_clk_dist(self, tile_id):
+        return self.dac_clk_dist_status[tile_id]
 
     def get_adc_tile_enb(self, tile_id):
-        return self.adc_tiles_status[tile_id]['IsEnabled']
+        return self.adc_tile_status[tile_id]['IsEnabled']
 
     def get_adc_tile_state(self, tile_id):
-        return self.adc_tiles_status[tile_id]['TileState']
+        return self.adc_tile_status[tile_id]['TileState']
 
     def get_adc_powerup_state(self, tile_id):
-        return self.adc_tiles_status[tile_id]['PowerUpState']
+        return self.adc_tile_status[tile_id]['PowerUpState']
 
     def get_adc_pll_state(self, tile_id):
-        return self.adc_tiles_status[tile_id]['PLLState']
+        return self.adc_tile_status[tile_id]['PLLState']
 
     def get_adc_block_enb(self, tile_id, block_id):
-        return self.adc_tiles_status[tile_id]['BlockStatusMask'] & (1 << block_id)
+        return self.adc_tile_status[tile_id]['BlockStatusMask'] & (1 << block_id)
+
+    def get_adc_clk_dist(self, tile_id):
+        return self.adc_clk_dist_status[tile_id]
 
 
 class MyRFdcDACTile(RFdcDacTile):
@@ -198,6 +207,36 @@ class MyRFdc:
         """Shutdown RF data converters safely."""
         self.shutdown_tiles()
 
+    def debug(self):
+        # Attributes for both DAC and ADC blocks
+        block_attr = ['BlockStatus', 'MixerSettings', 'QMCSettings',
+                      'CoarseDelaySettings', 'NyquistZone', 'EnabledInterrupts', 'PwrMode']
+        # Attributes for DAC block only
+        dac_only_attr = ['InterpolationFactor', 'DecoderMode',  # 'OutputCurr',
+                         'InvSincFIR', 'FabRdVldWords', 'FabWrVldWords', 'DataPathMode', 'IMRPassMode', 'DACCompMode']
+        # Attributes for ADC block only
+        adc_only_attr = ['DecimationFactor', 'CalibrationMode', 'FabRdVldWords',
+                         'FabWrVldWords', 'DecimationFactorObs', 'FabRdVldWordsObs', 'FabWrVldWordsObs', 'Dither', 'CalFreeze', 'DSA']
+
+        for tile in self.dac_tiles:
+            if self.rfdc_status.get_dac_tile_enb(tile.tile_id):
+                for block_id, block in enumerate(tile.blocks):
+                    if self.rfdc_status.get_dac_block_enb(
+                            tile.tile_id, block_id):
+                        for attr in block_attr:
+                            logging.info(attr+": "+str(getattr(block, attr)))
+                        for attr in dac_only_attr:
+                            logging.info(attr+": "+str(getattr(block, attr)))
+        for tile in self.adc_tiles:
+            if self.rfdc_status.get_adc_tile_enb(tile.tile_id):
+                for block_id, block in enumerate(tile.blocks):
+                    if self.rfdc_status.get_adc_block_enb(
+                            tile.tile_id, block_id):
+                        for attr in block_attr:
+                            logging.info(attr+": "+str(getattr(block, attr)))
+                        for attr in adc_only_attr:
+                            logging.info(attr+": "+str(getattr(block, attr)))
+
     def init_setup(self):
         """Power on DAC/ADC tiles and configure DAC/ADC blocks"""
         # Power on DAC tiles
@@ -221,20 +260,6 @@ class MyRFdc:
             tile.Shutdown()
         logging.info(f"All tiles has been safely shutdown!")
 
-    def dump_dac_clk(self, tile_id):
-        """Dump DAC clock configuration"""
-        logging.info(
-            f"DAC tile status: {self.rfdc.IPStatus['DACTileStatus'][tile_id]}")
-        logging.info(
-            f"DAC tile clock distribution: {self.rfdc.ClkDistribution['DAC'][tile_id]}")
-
-    def dump_adc_clk(self, tile_id):
-        """Dump ADC clock configuration"""
-        logging.info(
-            f"ADC tile status: {self.rfdc.IPStatus['ADCTileStatus'][tile_id]}")
-        logging.info(
-            f"ADC tile clock distribution: {self.rfdc.ClkDistribution['ADC'][tile_id]}")
-
     def power_on_dac_tile(self, tile):
         """Power on DAC tiles."""
         if self.rfdc_status.get_dac_tile_enb(tile.tile_id):
@@ -248,7 +273,8 @@ class MyRFdc:
             if tile_state < 15:
                 err_msg = f"DAC tile {tile.tile_id} ({tile.tile_phy_id}) is NOT fully powered up! Stuck at Step {tile_state}: {MyRFdcType.POWER_ON_SEQUENCE_STEPS[tile_state]['State']} Description: {MyRFdcType.POWER_ON_SEQUENCE_STEPS[tile_state]['Description']}"
                 if 6 <= tile_state <= 10 and self.debug_mode:
-                    self.dump_dac_clk(tile.tile_id)
+                    logging.info(
+                        self.rfdc_status.get_dac_clk_dist(tile.tile_id))
                 raise Exception(err_msg)
             logging.info(
                 f"DAC tile {tile.tile_id} ({tile.tile_phy_id}) is fully powered up!")
@@ -266,7 +292,8 @@ class MyRFdc:
             if tile_state < 15:
                 err_msg = f"ADC tile {tile.tile_id} ({tile.tile_phy_id}) is NOT fully powered up! Stuck at Step {tile_state}: {MyRFdcType.POWER_ON_SEQUENCE_STEPS[tile_state]['State']} Description: {MyRFdcType.POWER_ON_SEQUENCE_STEPS[tile_state]['Description']}"
                 if 6 <= tile_state <= 10 and self.debug_mode:
-                    self.dump_adc_clk(tile.tile_id)
+                    logging.info(
+                        self.rfdc_status.get_adc_clk_dist(tile.tile_id))
                 raise Exception(err_msg)
             logging.info(
                 f"ADC tile {tile.tile_id} ({tile.tile_phy_id}) is fully powered up!")
