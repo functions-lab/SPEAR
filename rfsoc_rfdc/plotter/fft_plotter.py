@@ -13,8 +13,12 @@ class FFTPlotter:
         self.fig = go.FigureWidget(layout={
             'title': 'FFT Magnitude Plot',
             'xaxis': {'title': 'Frequency (Hz)'},
-            'yaxis': {'title': 'Magnitude'}
+            'yaxis': {'title': 'Magnitude',
+                      'type': 'log',
+                      'range': [0, 8]
+                      }
         })
+
         self.fig.add_scattergl(x=[], y=[], name='Magnitude')
         display(self.fig)
 
