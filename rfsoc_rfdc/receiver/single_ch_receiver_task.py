@@ -20,7 +20,8 @@ class SingleChReceiverTask(OverlayTask):
     def __init__(self, overlay, samples_per_axis_stream=8, fifo_size=32768):
         super().__init__(overlay, name="SingleChReceiverTask")
         # TCP socket
-        self.server_config = ("192.168.0.101", 1234)
+        self.server_config = ("server.local", 1234)
+        # Make sure to bind this domain name to the IP address of your ADC sample plotting server
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.setsockopt(
             socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # Make sure the socket is reusable
