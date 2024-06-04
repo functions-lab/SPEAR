@@ -42,7 +42,7 @@ ZCU216_DEMO1_CONFIG = {
     "ADCNCO": -350
 }
 
-ZCU216_PKT_MODE_CONFIG = {
+ZCU216_DEFAULT_CONFIG = {
     "RefClockForPLL": 500.0,
     "DACSampleRate": 2000.0,
     "DACInterpolationRate": 2,
