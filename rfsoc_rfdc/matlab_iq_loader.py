@@ -2,6 +2,8 @@ import os
 import numpy as np
 import scipy.io
 
+from rfsoc_rfdc.rfdc_config import ZCU216_CONFIG
+
 
 class MatlabIqLoader:
     def __init__(self, file_path, key='wave'):
@@ -23,9 +25,12 @@ class MatlabIqLoader:
             raise KeyError(
                 f"The key '{self.key}' was not found in the MATLAB file {self.file_path}.")
 
-    def scale_waveform(self, range_min, range_max):
+    def scale_waveform(self, range_min, range_max, wave_scaling_factor=1.0):
         if self.wave is None:
             raise ValueError("Waveform data is not loaded")
+
+        range_min, range_max = int(
+            wave_scaling_factor * range_min), int(wave_scaling_factor * range_max)
 
         min_real, max_real = np.min(self.wave.real), np.max(self.wave.real)
         min_imag, max_imag = np.min(self.wave.imag), np.max(self.wave.imag)
