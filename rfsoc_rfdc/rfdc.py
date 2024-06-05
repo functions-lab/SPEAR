@@ -364,7 +364,7 @@ class MyRFdcType:
     DATA_PATH_DTYPE = np.int16
 
     DAC_MIN_SCALE = -2**13
-    DAC_MAX_SCALE = (2**13 - 1)
+    DAC_MAX_SCALE = 2**13
 
     # Power-on Sequence Steps from page 163 of PG269: Zynq UltraScale+ RFSoC RF Data Converter v2.4 Gen 1/2/3
     POWER_ON_STATES = [
