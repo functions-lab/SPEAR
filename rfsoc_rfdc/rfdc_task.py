@@ -1,5 +1,5 @@
-from .clocks import set_custom_lmclks
-from .overlay_task import OverlayTask
+from rfsoc_rfdc.clocks import set_custom_lmclks
+from rfsoc_rfdc.overlay_task import OverlayTask
 from rfsoc_rfdc.rfdc import MyRFdc
 
 from rfsoc_rfdc.rfdc_config import ZCU216_CONFIG
