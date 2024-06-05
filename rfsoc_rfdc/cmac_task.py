@@ -1,6 +1,6 @@
 import logging
 import time
-from .overlay_task import OverlayTask
+from rfsoc_rfdc.overlay_task import OverlayTask
 
 
 class CmacTask(OverlayTask):
