@@ -34,7 +34,7 @@ class SingleChTransmitterTask(OverlayTask):
                     channel_id=ch_idx,
                     dma_ip=self.dma_ip[ch_idx],
                     fifo_count_ip=self.fifo_count_ip[ch_idx],
-                    debug_mode=True
+                    debug_mode=False
                 )
             )
 

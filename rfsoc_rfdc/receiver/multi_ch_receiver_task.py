@@ -49,7 +49,7 @@ class MultiChReceiverTask(OverlayTask):
                     dma_ip=self.channel_dma[ch_idx],
                     fifo_count_ip=self.channel_fifo_count_ip[ch_idx],
                     buff_size=self.packet_size * self.samples_per_axis_stream + buffer_margin,
-                    debug_mode=True
+                    debug_mode=False
                 )
             )
 
