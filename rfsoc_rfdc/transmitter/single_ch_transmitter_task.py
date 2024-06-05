@@ -6,6 +6,8 @@ import numpy as np
 from rfsoc_rfdc.rfdc import MyRFdcType
 from rfsoc_rfdc.matlab_iq_loader import MatlabIqLoader
 
+from rfsoc_rfdc.rfdc_config import ZCU216_CONFIG
+
 
 class SingleChTransmitterTask(OverlayTask):
     """Single-Channel DAC"""
@@ -43,15 +45,15 @@ class SingleChTransmitterTask(OverlayTask):
 
         # Scale the waveform
         self.matlab_loader.scale_waveform(
-            MyRFdcType.DAC_MIN_SCALE, MyRFdcType.DAC_MAX_SCALE)
+            MyRFdcType.DAC_MIN_SCALE, MyRFdcType.DAC_MAX_SCALE, wave_scaling_factor=ZCU216_CONFIG['DAC_SCALING_FACTOR'])
         self.i_samples, self.q_samples = self.matlab_loader.get_iq_samples(
-            repeat_times=40)
+            repeat_times=1)
 
         # Generate iq samples for a tone
         # self.i_samples = WaveFormGenerator.generate_sine_wave(
-        #     repeat_time=1000, sample_pts=1000)
+        #     repeat_time=1000, sample_pts=1000, scaling_factor=ZCU216_CONFIG['DAC_SCALING_FACTOR'])
         # self.q_samples = WaveFormGenerator.generate_no_wave(
-        #     repeat_time=1000, sample_pts=1000)
+        #     repeat_time=1000, sample_pts=1000, scaling_factor=ZCU216_CONFIG['DAC_SCALING_FACTOR'])
 
         # Generate binary sequence
         # self.i_samples = WaveFormGenerator.generate_binary_seq(
