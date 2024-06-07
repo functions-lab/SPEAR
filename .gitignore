@@ -1,3 +1,6 @@
+# projects in hw_design
+*/*/*/*/*_proj/
+
 # rfdc config 
 ./rfsoc_rfdc/rfdc_config.py
 
