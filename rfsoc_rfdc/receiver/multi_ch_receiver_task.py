@@ -1,6 +1,6 @@
 from rfsoc_rfdc.throughput_timer import ThroughputTimer
 from rfsoc_rfdc.overlay_task import OverlayTask
-from .rx_channel import RxChannel
+from rfsoc_rfdc.receiver.rx_channel import RxChannel
 from rfsoc_rfdc.plotter.signal_plotter import ComplexSignalPlotter
 from rfsoc_rfdc.plotter.fft_plotter import FFTPlotter
 from pynq.lib import AxiGPIO
@@ -49,7 +49,7 @@ class MultiChReceiverTask(OverlayTask):
                     dma_ip=self.channel_dma[ch_idx],
                     fifo_count_ip=self.channel_fifo_count_ip[ch_idx],
                     buff_size=self.packet_size * self.samples_per_axis_stream + buffer_margin,
-                    debug_mode=True
+                    debug_mode=False
                 )
             )
 

@@ -1,7 +1,7 @@
 from rfsoc_rfdc.throughput_timer import ThroughputTimer
 from rfsoc_rfdc.waveform_generator import WaveFormGenerator
 from rfsoc_rfdc.overlay_task import OverlayTask
-from .tx_channel import TxChannel
+from rfsoc_rfdc.transmitter.tx_channel import TxChannel
 from pynq.lib import AxiGPIO
 import numpy as np
 import time
@@ -34,7 +34,7 @@ class MultiChTransmitterTask(OverlayTask):
                     channel_id=ch_idx,
                     dma_ip=self.channel_dma[ch_idx],
                     fifo_count_ip=self.channel_fifo_count_ip[ch_idx],
-                    debug_mode=True
+                    debug_mode=False
                 )
             )
 
