@@ -1,5 +1,5 @@
 from rfsoc_rfdc.throughput_timer import ThroughputTimer
-from rfsoc_rfdc.overlay_task import OverlayTask
+from rfsoc_rfdc.overlay_task import OverlayTask, TASK_STATE
 from rfsoc_rfdc.receiver.rx_channel import RxChannel
 from rfsoc_rfdc.plotter.signal_plotter import ComplexSignalPlotter
 from rfsoc_rfdc.plotter.fft_plotter import FFTPlotter
@@ -63,27 +63,30 @@ class MultiChReceiverTask(OverlayTask):
             pkg_gen.enable()
 
         update_counter = 0
-        while True:
-            # Start timer
-            t = time.time_ns()
-            # Receive iq samples for each channel
-            for dma in self.rx_channels:
-                dma.transfer()
-            for dma in self.rx_channels:
-                dma.wait()
-            # End timer
-            elapse = time.time_ns() - t
-            self.timer.update(elapse)
-            # Calculate average DMA transfer time
-            if update_counter > 1000:
-                update_counter = 0
-                self.timer.get_throughput()
-            update_counter = update_counter + 1
-            # Only fetch iq samples for the first channel
-            q_data = self.rx_channels[0].data[0::self.channel_count*2]
-            i_data = self.rx_channels[0].data[1::self.channel_count*2]
-            iq_data = i_data + 1j * q_data
-            # Plot only the first channel
-            # self.complex_plotter.update_plot(iq_data, plot_ratio=0.1)
-            # Update the FFT plotter
-            # self.fft_plotter.update_plot(iq_data)
+        while self.task_state != TASK_STATE["STOP"]:
+            if self.task_state == TASK_STATE["RUNNING"]:
+                # Start timer
+                t = time.time_ns()
+                # Receive iq samples for each channel
+                for dma in self.rx_channels:
+                    dma.transfer()
+                for dma in self.rx_channels:
+                    dma.wait()
+                # End timer
+                elapse = time.time_ns() - t
+                self.timer.update(elapse)
+                # Calculate average DMA transfer time
+                if update_counter > 1000:
+                    update_counter = 0
+                    self.timer.get_throughput()
+                update_counter = update_counter + 1
+                # Only fetch iq samples for the first channel
+                q_data = self.rx_channels[0].data[0::self.channel_count*2]
+                i_data = self.rx_channels[0].data[1::self.channel_count*2]
+                iq_data = i_data + 1j * q_data
+                # Plot only the first channel
+                # self.complex_plotter.update_plot(iq_data, plot_ratio=0.1)
+                # Update the FFT plotter
+                # self.fft_plotter.update_plot(iq_data)
+            else:
+                time.sleep(0.1)
