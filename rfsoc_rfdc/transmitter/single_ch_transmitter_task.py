@@ -1,8 +1,9 @@
 from rfsoc_rfdc.waveform_generator import WaveFormGenerator
-from rfsoc_rfdc.overlay_task import OverlayTask
+from rfsoc_rfdc.overlay_task import OverlayTask, TASK_STATE
 from rfsoc_rfdc.transmitter.tx_channel_iq2real import TxChannelIq2Real
 from pynq.lib import AxiGPIO
 import numpy as np
+import time
 from rfsoc_rfdc.rfdc import MyRFdcType
 from rfsoc_rfdc.matlab_iq_loader import MatlabIqLoader
 
@@ -70,7 +71,10 @@ class SingleChTransmitterTask(OverlayTask):
         for tx_ch in self.tx_channels:
             tx_ch.data_copy(i_buff=self.i_samples, q_buff=self.q_samples)
 
-        while True:
-            # Initiate DMA transfer
-            self.tx_channels[0].transfer()
-            self.tx_channels[0].wait()
+        while self.task_state != TASK_STATE["STOP"]:
+            if self.task_state == TASK_STATE["RUNNING"]:
+                # Initiate DMA transfer
+                self.tx_channels[0].transfer()
+                self.tx_channels[0].wait()
+            else:
+                time.sleep(0.1)
