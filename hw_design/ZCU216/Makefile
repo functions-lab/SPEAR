@@ -7,8 +7,8 @@ DESIGNS := $(notdir $(wildcard $(DESIGN_DIR)/*))
 all: $(DESIGNS)
 
 $(DESIGNS):
-	$(MAKE) bd DESIGN=$@
-	$(MAKE) bit DESIGN=$@
+	-$(MAKE) bd DESIGN=$@
+	-$(MAKE) bit DESIGN=$@
 
 bd:
 	cd $(DESIGN_DIR)/$(DESIGN); \
