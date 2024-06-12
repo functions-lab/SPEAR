@@ -3,6 +3,7 @@ if { $argc < 1 } {
     exit 1
 }
 set design_name [lindex $argv 0]
+set core_count [lindex $argv 1]
 set overlay_name "${design_name}_proj"
 
 # Set max thread
@@ -19,7 +20,7 @@ set_property top ${design_name}_wrapper [current_fileset]
 update_compile_order -fileset sources_1
 
 # Call implement
-launch_runs impl_1 -to_step write_bitstream -jobs 12
+launch_runs impl_1 -to_step write_bitstream -jobs ${core_count}
 wait_on_run impl_1
 
 # Move and rename bitstream to final location
