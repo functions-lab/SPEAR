@@ -1,14 +1,15 @@
 DESIGN_DIR := $(shell pwd)/block_designs
 SCRIPT_DIR := $(shell pwd)/scripts
 DESIGNS := $(notdir $(wildcard $(DESIGN_DIR)/*))
+CORES := $(shell nproc)
 
 .PHONY: all $(DESIGNS) clean clean_all
 
 all: $(DESIGNS)
 
 $(DESIGNS):
-	$(MAKE) bd DESIGN=$@
-	$(MAKE) bit DESIGN=$@
+	-$(MAKE) bd DESIGN=$@
+	-$(MAKE) bit DESIGN=$@
 
 bd:
 	cd $(DESIGN_DIR)/$(DESIGN); \
@@ -16,7 +17,11 @@ bd:
 
 bit:
 	cd $(DESIGN_DIR)/$(DESIGN); \
-	vivado -mode batch -source $(SCRIPT_DIR)/make_bit.tcl -notrace -nojournal -nolog -tclargs $(DESIGN)
+	vivado -mode batch -source $(SCRIPT_DIR)/make_bit.tcl -notrace -nojournal -nolog -tclargs $(DESIGN) $(CORES)
+
+check_timing:
+	cd $(DESIGN_DIR)/$(DESIGN); \
+	vivado -mode batch -source $(SCRIPT_DIR)/check_timing.tcl -notrace -nojournal -nolog -tclargs $(DESIGN)
 
 clean:
 	find $(DESIGN_DIR)/$(DESIGN) -type d -name "*_proj" -exec rm -rf {} +
