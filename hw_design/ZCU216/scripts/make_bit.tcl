@@ -29,3 +29,6 @@ file copy -force ./${overlay_name}/${overlay_name}.runs/impl_1/${design_name}_wr
 
 # copy hwh files
 file copy -force ./${overlay_name}/${overlay_name}.gen/sources_1/bd/${design_name}/hw_handoff/${design_name}.hwh ./${overlay_name}/bitstream/${design_name}.hwh
+
+# copy ltx files for debug
+file copy -force ./${overlay_name}/${overlay_name}.runs/impl_1/${design_name}_wrapper.ltx ./${overlay_name}/bitstream/${design_name}.ltx
