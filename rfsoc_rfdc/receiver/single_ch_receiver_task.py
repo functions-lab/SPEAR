@@ -106,9 +106,9 @@ class SingleChReceiverTask(OverlayTask):
         # TCP real/imag samples thd
         tcp_thd = threading.Thread(target=self.tcp_handler, args=(iq_data,))
 
-        for thd in [tcp_thd, fft_thd, plot_thd]:
+        for thd in [fft_thd, plot_thd]:
             thd.start()
-        for thd in [tcp_thd, fft_thd, plot_thd]:
+        for thd in [fft_thd, plot_thd]:
             thd.join()
 
         elapse = time.time_ns() - start_t
