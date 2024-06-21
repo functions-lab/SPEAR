@@ -1,19 +1,11 @@
 from abc import ABC, abstractmethod
 import pynq
+from pynq import DefaultIP
 
 
 class DmaMonitor(ABC):
-    """
-    Monitor the data transfer for a DMA (Direct Memory Access) interface. This class assumes DMA is buffered by AXI4-Stream Data FIFO. Also, we assume the following: 
-    1) AXI GPIOs are used to read the axis_wr_data_count[31:0] OR axis_rd_data_count[31:0] port of AXI4-Stream Data FIFO.
-    2) AXI GPIOs are used to read the prog_full OR prog_empty port of the AXI4-Stream Data FIFO.
-    Based on the reading of the above two ports, we can monitor the data transmission status between DMA and the AXI4-Stream Data FIFO.
-    """
 
     def __init__(self, dma_ip, fifo_count_ip):
-        """
-        Constructs all the necessary attributes for the PynqDMA object.
-        """
         # DMA IP core instance
         self.dma = dma_ip
         # Configure FIFO count IP core
@@ -22,59 +14,221 @@ class DmaMonitor(ABC):
         self.fifo_count.setlength(32)
 
     def get_fifo_count(self):
-        """
-        Returns the current count of the FIFO.
-        """
         return self.fifo_count.read()
 
     def get_debug_info(self):
-        """
-        Returns the debug information of the DMA.
-        """
         return self.dma.register_map
 
     @abstractmethod
     def transfer(self, buffer):
-        """
-        Abstract method for initiating a DMA transfer.
-        """
         pass
 
     @abstractmethod
     def wait(self):
-        """
-        Abstract method for waiting for the DMA transfer to complete.
-        """
         pass
 
-# Define the class for transmission DMA monitor
+    @abstractmethod
+    def stop(self):
+        pass
+
+
+class TxStreamingDmaV1(DefaultIP):
+
+    MASK_32b = 0xFFFFFFFF
+    MAX_BTT = 0x7FFFFF
+    BTT_MASK = 0x7FFFFF  # 23b
+    _FSM_LUT = ['S_IDLE', 'S_STREAM', 'S_ERROR']
+
+    def __init__(self, description):
+        super().__init__(description=description)
+        self._btt = 1  # Make sure BTT cannot be zero
+
+    bindto = ['user.org:user:data_mover_ctrl:1.0']
+
+    @property
+    def _start(self):
+        return self.read(0x00)
+
+    @_start.setter
+    def _start(self, value):
+        self.write(0x00, value)
+
+    @property
+    def _base_addr_upper(self):
+        return self.read(0x04)
+
+    @_base_addr_upper.setter
+    def _base_addr_upper(self, value):
+        self.write(0x04, value)
+
+    @property
+    def _base_addr_lower(self):
+        return self.read(0x08)
+
+    @_base_addr_lower.setter
+    def _base_addr_lower(self, value):
+        self.write(0x08, value)
+
+    @property
+    def _btt(self):
+        return self.read(0x0C)
+
+    @_btt.setter
+    def _btt(self, value):
+        self.write(0x0C, value)
+
+    @property
+    def _state(self):
+        return self.read(0x10)
+
+    def state(self):
+        return self._FSM_LUT[self._state]
+
+    def _config(self, addr, nbytes):
+        self._base_addr_lower = addr & self.MASK_32b
+        self._base_addr_upper = (addr >> 32) & self.MASK_32b
+        if nbytes > self.MAX_BTT:
+            raise ValueError(
+                f"Number of bytes to transfer is too large. Shall be smaller than {self.MAX_BTT} bytes")
+        self._btt = nbytes & self.BTT_MASK
+
+    def transfer(self, buffer):
+        self._config(buffer.physical_address, buffer.nbytes)
+        self._start = 1
+
+    def stop(self):
+        self._start = 0
+
+    def get_debug_info(self):
+        base_addr = ((self._base_addr_upper & self.MASK_32b) <<
+                     32) | (self._base_addr_lower & self.MASK_32b)
+        debug_info = f"start = {self._start}, btt = {self._btt}, base_addr = {base_addr}, state = {self.state()}"
+        return debug_info
+
+    def __del__(self):
+        self.stop()
+
+
+class TxStreamingDmaV2(DefaultIP):
+
+    MASK_32b = 0xFFFFFFFF
+    MAX_BTT = 0x7FFFFF
+    BTT_MASK = 0x7FFFFF  # 23b
+    _FSM_LUT = ['S_IDLE', 'S_STREAM', 'S_ERROR', 'S_SINGLE']
+    _CMD_LUT = ['CMD_SINGLE', 'CMD_STREAM', 'CMD_STOP']
+
+    def __init__(self, description):
+        super().__init__(description=description)
+        self._btt = 1  # Make sure BTT cannot be zero
+
+    bindto = ['user.org:user:data_mover_ctrl:2.0']
+
+    @property
+    def _cmd(self):
+        return self.read(0x00)
+
+    @_cmd.setter
+    def _cmd(self, value):
+        self.write(0x00, value)
+
+    @property
+    def _base_addr_upper(self):
+        return self.read(0x04)
+
+    @_base_addr_upper.setter
+    def _base_addr_upper(self, value):
+        self.write(0x04, value)
+
+    @property
+    def _base_addr_lower(self):
+        return self.read(0x08)
+
+    @_base_addr_lower.setter
+    def _base_addr_lower(self, value):
+        self.write(0x08, value)
+
+    @property
+    def _btt(self):
+        return self.read(0x0C)
+
+    @_btt.setter
+    def _btt(self, value):
+        self.write(0x0C, value)
+
+    @property
+    def _state(self):
+        return self.read(0x10)
+
+    def set_buffer(self, buffer):
+        print(self._debug())
+        addr, nbytes = buffer.physical_address, buffer.nbytes
+        self._base_addr_lower = addr & self.MASK_32b
+        self._base_addr_upper = (addr >> 32) & self.MASK_32b
+        if nbytes > self.MAX_BTT:
+            raise ValueError(
+                f"Number of bytes to transfer is too large. Shall be smaller than {self.MAX_BTT} bytes")
+        self._btt = nbytes & self.BTT_MASK
+        print(self._debug())
+
+    def _set_cmd(self, cmd):
+        try:
+            index = self._CMD_LUT.index(cmd)
+            print(f"command {cmd} index {index}")
+            self._cmd = index
+            print(f"written to {index}")
+        except:
+            raise ValueError(
+                f"Invalid command {cmd}. Valid commands are {self._CMD_LUT}")
+
+    def _get_cmd(self):
+        return self._CMD_LUT[self._cmd]
+
+    def state(self):
+        return self._FSM_LUT[self._state]
+
+    def transfer(self, buffer):
+        self.set_buffer(buffer)
+        self._set_cmd('CMD_SINGLE')
+
+    def wait(self):
+        while True:
+            state = self.state()
+            if state == 'S_IDLE':
+                break
+            if state == 'S_ERROR':
+                raise ValueError(f"Error in DMA transfer.")
+
+    def start(self):
+        self._set_cmd('CMD_STREAM')
+
+    def stop(self):
+        self._set_cmd('CMD_STOP')
+
+    def _debug(self):
+        base_addr = ((self._base_addr_upper & self.MASK_32b) <<
+                     32) | (self._base_addr_lower & self.MASK_32b)
+        debug_info = f"Command = {self._cmd}, BTT = {self._btt}, base_addr = {base_addr}, state = {self.state()}"
+        return debug_info
 
 
 class TxDmaMonitor(DmaMonitor):
     def transfer(self, buffer):
-        """
-        Initiates a DMA transfer for transmission.
-        """
         self.dma.sendchannel.transfer(buffer)
 
     def wait(self):
-        """
-        Waits for the DMA transfer to complete for transmission.
-        """
         self.dma.sendchannel.wait()
 
+    def stop(self):
+        pass
 # Define the class for reception DMA monitor
 
 
 class RxDmaMonitor(DmaMonitor):
     def transfer(self, buffer):
-        """
-        Initiates a DMA transfer for reception.
-        """
         self.dma.recvchannel.transfer(buffer)
 
     def wait(self):
-        """
-        Waits for the DMA transfer to complete for reception.
-        """
         self.dma.recvchannel.wait()
+
+    def stop(self):
+        pass
