@@ -6,6 +6,7 @@ import numpy as np
 import time
 from rfsoc_rfdc.rfdc import MyRFdcType
 from rfsoc_rfdc.matlab_iq_loader import MatlabIqLoader
+from rfsoc_rfdc.dma_monitor import TxStreamingDmaV2
 
 from rfsoc_rfdc.rfdc_config import ZCU216_CONFIG
 
@@ -19,7 +20,7 @@ class SingleChTransmitterTask(OverlayTask):
         self.file_path = file_path
         # Hardware IPs
         self.dma_ip = [
-            self.ol.dac_datapath.t230.axi_dma
+            self.ol.dac_datapath.t230.data_mover_ctrl
         ]
         self.fifo_count_ip = [
             AxiGPIO(
@@ -75,6 +76,7 @@ class SingleChTransmitterTask(OverlayTask):
             if self.task_state == TASK_STATE["RUNNING"]:
                 # Initiate DMA transfer
                 self.tx_channels[0].transfer()
-                self.tx_channels[0].wait()
+                time.sleep(1)
             else:
-                time.sleep(0.1)
+                self.tx_channels[0].tx_dma.stop()
+                time.sleep(1)
