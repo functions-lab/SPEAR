@@ -30,9 +30,6 @@ class TxChannel:
                                 dtype=MyRFdcType.DATA_PATH_DTYPE)
         self.tx_buff[:] = buff[:]
 
-        self.axi_data_mover.config(
-            self.tx_buff.physical_address, self.tx_buff.nbytes)
-
     def transfer(self):
         if self.debug_mode:
             fifo_count = self.fifo_count.read()

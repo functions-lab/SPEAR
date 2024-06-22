@@ -1,5 +1,3 @@
-from rfsoc_rfdc.throughput_timer import ThroughputTimer
-from rfsoc_rfdc.waveform_generator import WaveFormGenerator
 from rfsoc_rfdc.overlay_task import OverlayTask, TASK_STATE
 from rfsoc_rfdc.transmitter.tx_channel import TxChannel
 from pynq.lib import AxiGPIO
@@ -14,13 +12,11 @@ class MultiChTransmitterTask(OverlayTask):
 
     def __init__(self, overlay, channel_count=4):
         super().__init__(overlay, name="MultiChTransmitterTask")
-        # Throughput timer
-        self.timer = ThroughputTimer()
         # Number of DACs controlled by a DMA
         self.channel_count = channel_count
         # Hardware IPs
         self.channel_dma = [
-            self.ol.dac_datapath.t230.axi_dma
+            self.ol.dac_datapath.t230.data_mover_ctrl
         ]
         self.channel_fifo_count_ip = [
             AxiGPIO(self.ol.ip_dict['dac_datapath/t230/fifo_count']).channel1
@@ -47,7 +43,7 @@ class MultiChTransmitterTask(OverlayTask):
         self.matlab_loader.scale_waveform(
             MyRFdcType.DAC_MIN_SCALE, MyRFdcType.DAC_MAX_SCALE)
         i_samples, q_samples = self.matlab_loader.get_iq_samples(
-            repeat_times=40)
+            repeat_times=1)
 
         # Generate iq samples for a tone
         # q_samples = WaveFormGenerator.generate_sine_wave(
@@ -80,23 +76,13 @@ class MultiChTransmitterTask(OverlayTask):
         for tx_ch in self.tx_channels:
             tx_ch.data_copy(self.multi_ch_iq_samples)
 
-        update_counter = 0
         while self.task_state != TASK_STATE["STOP"]:
             if self.task_state == TASK_STATE["RUNNING"]:
-                # Start timer
-                t = time.time_ns()
                 # Transfer iq samples for each channel
                 for dma in self.tx_channels:
                     dma.transfer()
-                for dma in self.tx_channels:
-                    dma.wait()
-                # End timer
-                elapse = time.time_ns() - t
-                self.timer.update(elapse)
-                # Calculate average DMA transfer time
-                if update_counter > 1000:
-                    update_counter = 0
-                    self.timer.get_throughput()
-                update_counter = update_counter + 1
+                time.sleep(1)
             else:
-                time.sleep(0.1)
+                for dma in self.tx_channels:
+                    dma.tx_dma.stop()
+                time.sleep(1)
