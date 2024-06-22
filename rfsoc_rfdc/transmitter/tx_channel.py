@@ -2,6 +2,7 @@ import numpy as np
 import logging
 from pynq import allocate
 from rfsoc_rfdc.rfdc import MyRFdcType
+from rfsoc_rfdc.dma_monitor import TxDmaMonitor
 
 
 class TxChannel:

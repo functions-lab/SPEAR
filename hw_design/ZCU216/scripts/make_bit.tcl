@@ -3,6 +3,7 @@ if { $argc < 1 } {
     exit 1
 }
 set design_name [lindex $argv 0]
+set core_count [lindex $argv 1]
 set overlay_name "${design_name}_proj"
 
 # Set max thread
@@ -19,7 +20,7 @@ set_property top ${design_name}_wrapper [current_fileset]
 update_compile_order -fileset sources_1
 
 # Call implement
-launch_runs impl_1 -to_step write_bitstream -jobs 12
+launch_runs impl_1 -to_step write_bitstream -jobs ${core_count}
 wait_on_run impl_1
 
 # Move and rename bitstream to final location
@@ -28,3 +29,6 @@ file copy -force ./${overlay_name}/${overlay_name}.runs/impl_1/${design_name}_wr
 
 # copy hwh files
 file copy -force ./${overlay_name}/${overlay_name}.gen/sources_1/bd/${design_name}/hw_handoff/${design_name}.hwh ./${overlay_name}/bitstream/${design_name}.hwh
+
+# copy ltx files for debug
+file copy -force ./${overlay_name}/${overlay_name}.runs/impl_1/${design_name}_wrapper.ltx ./${overlay_name}/bitstream/${design_name}.ltx

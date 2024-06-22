@@ -78,7 +78,7 @@ class MultiChReceiverTask(OverlayTask):
                 # Calculate average DMA transfer time
                 if update_counter > 1000:
                     update_counter = 0
-                    self.timer.get_throughput()
+                    # self.timer.get_throughput()
                 update_counter = update_counter + 1
                 # Only fetch iq samples for the first channel
                 q_data = self.rx_channels[0].data[0::self.channel_count*2]
