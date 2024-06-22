@@ -1,7 +1,7 @@
-import matplotlib.pyplot as plt
 import numpy as np
-
 from rfsoc_rfdc.rfdc import MyRFdcType
+
+import matplotlib.pyplot as plt
 
 
 class WaveFormGenerator:
@@ -9,52 +9,54 @@ class WaveFormGenerator:
     A class that generates different types of waveforms.
     """
     @staticmethod
-    def generate_sine_wave(repeat_time=1, sample_pts=1000):
+    def generate_sine_wave(repeat_time=1, sample_pts=1000, scaling_factor=1.0):
         t = np.linspace(0, repeat_time, int(
             sample_pts * repeat_time), endpoint=False)
-        wave = np.sin(2 * np.pi * t) * MyRFdcType.DAC_MAX_SCALE
+        wave = np.sin(2 * np.pi * t) * \
+            int(MyRFdcType.DAC_MAX_SCALE * scaling_factor)
         return wave.astype(MyRFdcType.DATA_PATH_DTYPE)
 
     @staticmethod
-    def generate_square_wave(repeat_time=1, sample_pts=1000):
+    def generate_square_wave(repeat_time=1, sample_pts=1000, scaling_factor=1.0):
         t = np.linspace(0, repeat_time, int(
             sample_pts * repeat_time), endpoint=False)
         wave = np.sign(np.sin(2 * np.pi * t)) * \
-            MyRFdcType.DAC_MAX_SCALE
+            int(MyRFdcType.DAC_MAX_SCALE * scaling_factor)
         return wave.astype(MyRFdcType.DATA_PATH_DTYPE)
 
     @staticmethod
-    def generate_triangle_wave(repeat_time=1, sample_pts=1000):
+    def generate_triangle_wave(repeat_time=1, sample_pts=1000, scaling_factor=1.0):
         t = np.linspace(0, repeat_time, int(
             sample_pts * repeat_time), endpoint=False)
         wave = 2 * np.abs(2 * (t - np.floor(t + 0.5))) - 1
-        wave *= MyRFdcType.DAC_MAX_SCALE
+        wave *= int(MyRFdcType.DAC_MAX_SCALE * scaling_factor)
         return wave.astype(MyRFdcType.DATA_PATH_DTYPE)
 
     @staticmethod
-    def generate_sawtooth_wave(repeat_time=1, sample_pts=1000):
+    def generate_sawtooth_wave(repeat_time=1, sample_pts=1000, scaling_factor=1.0):
         t = np.linspace(0, repeat_time, int(
             sample_pts * repeat_time), endpoint=False)
         wave = 2 * (t - np.floor(0.5 + t))
-        wave *= MyRFdcType.DAC_MAX_SCALE
+        wave *= int(MyRFdcType.DAC_MAX_SCALE * scaling_factor)
         return wave.astype(MyRFdcType.DATA_PATH_DTYPE)
 
     @staticmethod
-    def generate_cosine_wave(repeat_time=1, sample_pts=1000):
+    def generate_cosine_wave(repeat_time=1, sample_pts=1000, scaling_factor=1.0):
         t = np.linspace(0, repeat_time, int(
             sample_pts * repeat_time), endpoint=False)
-        wave = np.cos(2 * np.pi * t) * MyRFdcType.DAC_MAX_SCALE
+        wave = np.cos(2 * np.pi * t) * \
+            int(MyRFdcType.DAC_MAX_SCALE * scaling_factor)
         return wave.astype(MyRFdcType.DATA_PATH_DTYPE)
 
     @staticmethod
-    def generate_binary_seq(repeat_time=1, sample_pts=1000):
+    def generate_binary_seq(repeat_time=1, sample_pts=1000, scaling_factor=1.0):
         num_of_samples = repeat_time * sample_pts
         wave = np.tile([0, 1], num_of_samples // 2 + 1)[:num_of_samples]
-        wave *= MyRFdcType.DAC_MAX_SCALE
+        wave *= int(MyRFdcType.DAC_MAX_SCALE * scaling_factor)
         return wave.astype(MyRFdcType.DATA_PATH_DTYPE)
 
     @staticmethod
-    def generate_zadoff_chu_wave(repeat_time=1, sample_pts=1000):
+    def generate_zadoff_chu_wave(repeat_time=1, sample_pts=1000, scaling_factor=1.0):
         u = 1  # Root index of the the ZC sequence
         seq_length = sample_pts * repeat_time
         q = 0  # Cyclic shift of the sequence
@@ -74,17 +76,17 @@ class WaveFormGenerator:
         n = np.arange(seq_length)
         zcseq = np.exp(-1j * np.pi * u * n * (n+cf+2.*q) / seq_length)
 
-        zcseq_real = np.real(zcseq) * MyRFdcType.DAC_MAX_SCALE
-        zcseq_real = zcseq_real.astype(
-            MyRFdcType.DATA_PATH_DTYPE)
-        zcseq_imag = np.imag(zcseq) * MyRFdcType.DAC_MAX_SCALE
-        zcseq_imag = zcseq_imag.astype(
-            MyRFdcType.DATA_PATH_DTYPE)
+        scale_to_max = int(MyRFdcType.DAC_MAX_SCALE * scaling_factor)
+
+        zcseq_real = np.real(zcseq) * scale_to_max
+        zcseq_real = zcseq_real.astype(MyRFdcType.DATA_PATH_DTYPE)
+        zcseq_imag = np.imag(zcseq) * scale_to_max
+        zcseq_imag = zcseq_imag.astype(MyRFdcType.DATA_PATH_DTYPE)
 
         return zcseq_real, zcseq_imag
 
     @staticmethod
-    def generate_no_wave(repeat_time=1, sample_pts=1000):
+    def generate_no_wave(repeat_time=1, sample_pts=1000, scaling_factor=1.0):
         wave = np.zeros(sample_pts * repeat_time)
         return wave.astype(MyRFdcType.DATA_PATH_DTYPE)
 

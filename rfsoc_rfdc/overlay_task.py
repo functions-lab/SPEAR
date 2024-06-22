@@ -7,6 +7,13 @@ import os
 import time
 from pynq.lib import AxiGPIO
 
+TASK_STATE = {
+    "IDLE": 0,
+    "RUNNING": 1,
+    "PAUSE": 2,
+    "STOP": 3
+}
+
 
 class OverlayTask(ABC):
     """
@@ -38,6 +45,7 @@ class OverlayTask(ABC):
             raise TypeError("This task is not an RFSoCOverlay instance.")
         self.ol = overlay
         self.task_name = name
+        self.task_state = TASK_STATE['IDLE']
         self.thread = threading.Thread(target=self.run)
 
     @abstractmethod
@@ -48,16 +56,37 @@ class OverlayTask(ABC):
         pass
 
     def start(self):
-        """
-        Starts the task's thread, causing it to run concurrently.
-        """
+        """Starts the task's thread, causing it to run concurrently"""
         self.thread.start()
+        self.task_state = TASK_STATE['RUNNING']
+
+    def pause(self):
+        """Pause task execution by changing task state"""
+        if self.task_state != TASK_STATE['RUNNING']:
+            raise Exception(f"Task is not running")
+        self.task_state = TASK_STATE['PAUSE']
+
+    def resume(self):
+        """Resume task execution by changing task state"""
+        if self.task_state != TASK_STATE['PAUSE']:
+            raise Exception(f"Task is not paused")
+        self.task_state = TASK_STATE['RUNNING']
+
+    def stop(self):
+        """Stop task execution"""
+        self.task_state = TASK_STATE['STOP']
+        self.thread.join()
 
     def join(self):
-        """
-        Blocks until the task's thread terminates.
-        """
+        """Blocks until the task's thread terminates"""
         self.thread.join()
+
+
+class DaemonTask(ABC):
+
+    @abstractmethod
+    def generate_memory(self):
+        pass
 
 
 class BlinkLedTask(OverlayTask):
@@ -67,7 +96,7 @@ class BlinkLedTask(OverlayTask):
     Inherits from OverlayTask.
 
     Attributes:
-        gleds (AxiGPIO): AxiGPIO instance for controlling green LEDs.
+        green_leds (AxiGPIO): AxiGPIO instance for controlling green LEDs.
         red_leds (AxiGPIO): AxiGPIO instance for controlling red LEDs.
 
     Methods:
@@ -82,9 +111,9 @@ class BlinkLedTask(OverlayTask):
             overlay (RFSoCOverlay): The RFSoCOverlay instance to operate on.
         """
         super().__init__(overlay, name="BlinkLedTask")
-        self.gleds = AxiGPIO(self.ol.ip_dict['axi_gpio_led']).channel1
+        self.green_leds = AxiGPIO(self.ol.ip_dict['axi_gpio_led']).channel1
         self.red_leds = AxiGPIO(self.ol.ip_dict['axi_gpio_led']).channel2
-        for leds in [self.red_leds, self.gleds]:
+        for leds in [self.red_leds, self.green_leds]:
             leds.setdirection("out")
             leds.setlength(8)
 
@@ -93,8 +122,9 @@ class BlinkLedTask(OverlayTask):
         Runs the LED blinking task. Alternates the LEDs between on and off states at a fixed interval.
         """
         interval = 0.3
-        while True:
-            self.gleds.write(0xff, 0xff)  # Turn on all green LEDs
-            time.sleep(interval)
-            self.gleds.write(0x00, 0xff)  # Turn off all green LEDs
-            time.sleep(interval)
+        while self.task_state != TASK_STATE["STOP"]:
+            if self.task_state == TASK_STATE["RUNNING"]:
+                self.green_leds.write(0xff, 0xff)  # Turn on all green LEDs
+                time.sleep(interval)
+                self.green_leds.write(0x00, 0xff)  # Turn off all green LEDs
+                time.sleep(interval)
