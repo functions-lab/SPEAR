@@ -42,4 +42,14 @@ ZCU216_DEMO1_CONFIG = {
     "ADCNCO": -350
 }
 
-ZCU216_CONFIG = merge_dict(ZCU216_MIN_MAX_CONFIG, ZCU216_DEMO3_CONFIG)
+ZCU216_PKT_MODE_CONFIG = {
+    "RefClockForPLL": 500.0,
+    "DACSampleRate": 4000.0,
+    "DACInterpolationRate": 2,
+    "DACNCO": 0,
+    "ADCSampleRate": 2000.0,
+    "ADCInterpolationRate": 2,
+    "ADCNCO": -0
+}
+
+ZCU216_CONFIG = merge_dict(ZCU216_MIN_MAX_CONFIG, ZCU216_PKT_MODE_CONFIG)
