@@ -38,4 +38,4 @@ class RfdcTask(OverlayTask):
         # Configure RF data converters
         self.rfdc.init_setup()
         # Customly set DAC/ADC NCO
-        self.set_nco()
+        # self.set_nco()
