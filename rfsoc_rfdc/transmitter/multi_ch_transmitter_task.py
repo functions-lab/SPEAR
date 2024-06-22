@@ -96,7 +96,7 @@ class MultiChTransmitterTask(OverlayTask):
                 # Calculate average DMA transfer time
                 if update_counter > 1000:
                     update_counter = 0
-                    self.timer.get_throughput()
+                    # self.timer.get_throughput()
                 update_counter = update_counter + 1
             else:
                 time.sleep(0.1)
