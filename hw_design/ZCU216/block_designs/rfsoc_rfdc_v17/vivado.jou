@@ -1,0 +1,12 @@
+#-----------------------------------------------------------
+# Vivado v2021.1 (64-bit)
+# SW Build 3247384 on Thu Jun 10 19:36:07 MDT 2021
+# IP Build 3246043 on Fri Jun 11 00:30:35 MDT 2021
+# Start of session at: Wed Jun 12 07:41:43 2024
+# Process ID: 18574
+# Current directory: /home/wei/git/zcu216_dev/hw_design/ZCU216/block_designs/rfsoc_rfdc_v17
+# Command line: vivado -mode batch -source /home/wei/git/zcu216_dev/hw_design/ZCU216/scripts/make_bit.tcl -tclargs rfsoc_rfdc_v17
+# Log file: /home/wei/git/zcu216_dev/hw_design/ZCU216/block_designs/rfsoc_rfdc_v17/vivado.log
+# Journal file: /home/wei/git/zcu216_dev/hw_design/ZCU216/block_designs/rfsoc_rfdc_v17/vivado.jou
+#-----------------------------------------------------------
+source /home/wei/git/zcu216_dev/hw_design/ZCU216/scripts/make_bit.tcl

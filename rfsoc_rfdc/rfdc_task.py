@@ -23,13 +23,13 @@ class RfdcTask(OverlayTask):
             dac_nco_mhz += dac_nco_offset
             self.rfdc.config_dac_nco(tile, block_id, dac_nco_mhz)
         # Additional configuration for ADC NCO
-        # adc_nco_mhz = ZCU216_CONFIG['ADCNCO']
-        # adc_nco_offset = ZCU216_CONFIG['ADCSampleRate'] / \
-        #     ZCU216_CONFIG['ADCInterpolationRate'] + 10
-        # tile = self.rfdc.adc_tiles[2]
-        # for block_id in [0, 1, 2, 3]:
-        #     adc_nco_mhz -= adc_nco_offset
-        #     self.rfdc.config_adc_nco(tile, block_id, adc_nco_mhz)
+        adc_nco_mhz = ZCU216_CONFIG['ADCNCO']
+        adc_nco_offset = ZCU216_CONFIG['ADCSampleRate'] / \
+            ZCU216_CONFIG['ADCInterpolationRate'] + 10
+        tile = self.rfdc.adc_tiles[2]
+        for block_id in [0, 1, 2, 3]:
+            adc_nco_mhz -= adc_nco_offset
+            self.rfdc.config_adc_nco(tile, block_id, adc_nco_mhz)
 
     def run(self):
         """Run the task."""
