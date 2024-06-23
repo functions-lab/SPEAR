@@ -1,18 +1,21 @@
 import numpy as np
 import logging
-from rfsoc_rfdc.dma_monitor import TxDmaMonitor
 from pynq import allocate
 from rfsoc_rfdc.rfdc import MyRFdcType
+from rfsoc_rfdc.dma_monitor import TxDmaMonitor
 
 
 class TxChannel:
     def __init__(self, channel_id, dma_ip, fifo_count_ip, debug_mode=False):
         self.channel_id = channel_id
         self.tx_buff = None
-        self.tx_dma = TxDmaMonitor(dma_ip=dma_ip,
-                                   fifo_count_ip=fifo_count_ip)
+        self.tx_dma = dma_ip
         self.warning_cnt = 0
         self.debug_mode = debug_mode
+        # Config FIFO count IP
+        self.fifo_count = fifo_count_ip
+        self.fifo_count.setdirection("in")
+        self.fifo_count.setlength(32)
 
     def data_type_check(self, buff):
         # Validations for input buffers
@@ -28,9 +31,12 @@ class TxChannel:
                                 dtype=MyRFdcType.DATA_PATH_DTYPE)
         self.tx_buff[:] = buff[:]
 
+        self.axi_data_mover.config(
+            self.tx_buff.physical_address, self.tx_buff.nbytes)
+
     def transfer(self):
         if self.debug_mode:
-            fifo_count = self.tx_dma.get_fifo_count()
+            fifo_count = self.fifo_count.read()
 
             # Warning for low FIFO count
             if fifo_count == 0:

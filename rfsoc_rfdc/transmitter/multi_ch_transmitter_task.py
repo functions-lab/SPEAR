@@ -1,6 +1,6 @@
 from rfsoc_rfdc.throughput_timer import ThroughputTimer
 from rfsoc_rfdc.waveform_generator import WaveFormGenerator
-from rfsoc_rfdc.overlay_task import OverlayTask
+from rfsoc_rfdc.overlay_task import OverlayTask, TASK_STATE
 from rfsoc_rfdc.transmitter.tx_channel import TxChannel
 from pynq.lib import AxiGPIO
 import numpy as np
@@ -81,19 +81,22 @@ class MultiChTransmitterTask(OverlayTask):
             tx_ch.data_copy(self.multi_ch_iq_samples)
 
         update_counter = 0
-        while True:
-            # Start timer
-            t = time.time_ns()
-            # Transfer iq samples for each channel
-            for dma in self.tx_channels:
-                dma.transfer()
-            for dma in self.tx_channels:
-                dma.wait()
-            # End timer
-            elapse = time.time_ns() - t
-            self.timer.update(elapse)
-            # Calculate average DMA transfer time
-            if update_counter > 1000:
-                update_counter = 0
-                self.timer.get_throughput()
-            update_counter = update_counter + 1
+        while self.task_state != TASK_STATE["STOP"]:
+            if self.task_state == TASK_STATE["RUNNING"]:
+                # Start timer
+                t = time.time_ns()
+                # Transfer iq samples for each channel
+                for dma in self.tx_channels:
+                    dma.transfer()
+                for dma in self.tx_channels:
+                    dma.wait()
+                # End timer
+                elapse = time.time_ns() - t
+                self.timer.update(elapse)
+                # Calculate average DMA transfer time
+                if update_counter > 1000:
+                    update_counter = 0
+                    # self.timer.get_throughput()
+                update_counter = update_counter + 1
+            else:
+                time.sleep(0.1)

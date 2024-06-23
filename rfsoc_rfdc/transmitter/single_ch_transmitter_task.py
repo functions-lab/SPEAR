@@ -1,10 +1,12 @@
 from rfsoc_rfdc.waveform_generator import WaveFormGenerator
-from rfsoc_rfdc.overlay_task import OverlayTask
+from rfsoc_rfdc.overlay_task import OverlayTask, TASK_STATE
 from rfsoc_rfdc.transmitter.tx_channel_iq2real import TxChannelIq2Real
 from pynq.lib import AxiGPIO
 import numpy as np
+import time
 from rfsoc_rfdc.rfdc import MyRFdcType
 from rfsoc_rfdc.matlab_iq_loader import MatlabIqLoader
+from rfsoc_rfdc.dma_monitor import TxStreamingDmaV2
 
 from rfsoc_rfdc.rfdc_config import ZCU216_CONFIG
 
@@ -18,7 +20,7 @@ class SingleChTransmitterTask(OverlayTask):
         self.file_path = file_path
         # Hardware IPs
         self.dma_ip = [
-            self.ol.dac_datapath.t230.axi_dma
+            self.ol.dac_datapath.t230.data_mover_ctrl
         ]
         self.fifo_count_ip = [
             AxiGPIO(
@@ -70,7 +72,11 @@ class SingleChTransmitterTask(OverlayTask):
         for tx_ch in self.tx_channels:
             tx_ch.data_copy(i_buff=self.i_samples, q_buff=self.q_samples)
 
-        while True:
-            # Initiate DMA transfer
-            self.tx_channels[0].transfer()
-            self.tx_channels[0].wait()
+        while self.task_state != TASK_STATE["STOP"]:
+            if self.task_state == TASK_STATE["RUNNING"]:
+                # Initiate DMA transfer
+                self.tx_channels[0].transfer()
+                time.sleep(1)
+            else:
+                self.tx_channels[0].tx_dma.stop()
+                time.sleep(1)

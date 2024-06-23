@@ -1,4 +1,4 @@
-from rfsoc_rfdc.overlay_task import OverlayTask
+from rfsoc_rfdc.overlay_task import OverlayTask, TASK_STATE
 from rfsoc_rfdc.receiver.rx_channel_real2iq import RxChannelReal2Iq
 from rfsoc_rfdc.plotter.signal_plotter import ComplexSignalPlotter
 from rfsoc_rfdc.plotter.fft_plotter import FFTPlotter
@@ -106,9 +106,9 @@ class SingleChReceiverTask(OverlayTask):
         # TCP real/imag samples thd
         tcp_thd = threading.Thread(target=self.tcp_handler, args=(iq_data,))
 
-        for thd in [tcp_thd, fft_thd, plot_thd]:
+        for thd in [fft_thd, plot_thd]:
             thd.start()
-        for thd in [tcp_thd, fft_thd, plot_thd]:
+        for thd in [fft_thd, plot_thd]:
             thd.join()
 
         elapse = time.time_ns() - start_t
@@ -120,10 +120,13 @@ class SingleChReceiverTask(OverlayTask):
             pkg_gen.packetsize = self.packet_size
             pkg_gen.enable()
 
-        while True:
-            # Initiate DMA transfer
-            self.rx_channels[0].transfer()
-            self.rx_channels[0].wait()
-            iq_data = self.rx_channels[0].data
-            # IQ sample handler
-            self.sample_handler(iq_data)
+        while self.task_state != TASK_STATE["STOP"]:
+            if self.task_state == TASK_STATE["RUNNING"]:
+                # Initiate DMA transfer
+                self.rx_channels[0].transfer()
+                self.rx_channels[0].wait()
+                iq_data = self.rx_channels[0].data
+                # IQ sample handler
+                self.sample_handler(iq_data)
+            else:
+                time.sleep(0.1)
