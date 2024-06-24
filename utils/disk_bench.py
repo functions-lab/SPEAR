@@ -1,6 +1,7 @@
 import os
 import time
 
+
 def write_test_file(file_path, file_size):
     """ Write random data to a file to test write speed. """
     data = os.urandom(file_size)  # Generate random data
@@ -10,6 +11,7 @@ def write_test_file(file_path, file_size):
     end_time = time.time()
     return end_time - start_time  # Return the duration in seconds
 
+
 def read_test_file(file_path):
     """ Read data from a file to test read speed. """
     start_time = time.time()
@@ -17,6 +19,7 @@ def read_test_file(file_path):
         data = file.read()
     end_time = time.time()
     return end_time - start_time  # Return the duration in seconds
+
 
 def main():
     file_path = 'testfile.tmp'
@@ -36,6 +39,6 @@ def main():
     # Clean up the test file
     os.remove(file_path)
 
+
 if __name__ == '__main__':
     main()
-
