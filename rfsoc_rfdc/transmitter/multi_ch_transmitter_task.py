@@ -67,7 +67,7 @@ class MultiChTransmitterTask(OverlayTask):
     def gen_multi_ch_iq_layout(self, i_samples, q_samples, repeat_times=4):
         multi_ch_i = np.repeat(i_samples, repeat_times)
         multi_ch_q = np.repeat(q_samples, repeat_times)
-        multi_ch_layout = np.vstack((multi_ch_q, multi_ch_i))
+        multi_ch_layout = np.vstack((multi_ch_i, multi_ch_q))
         multi_ch_layout = multi_ch_layout.T.flatten()
         return multi_ch_layout
 
