@@ -36,7 +36,7 @@ class MultiChTransmitterTask(OverlayTask):
 
         # Initialize MatlabIqLoader
         self.matlab_loader = MatlabIqLoader(
-            file_path="./wave_files/wifi_wave.mat", key="wave")
+            file_path="./wave_files/Tx_1.mat", key="wave")
         self.matlab_loader.load_matlab_waveform()
 
         # Scale the waveform
@@ -62,11 +62,11 @@ class MultiChTransmitterTask(OverlayTask):
         #     repeat_time=1000, sample_pts=1000)
 
         self.multi_ch_iq_samples = self.gen_multi_ch_iq_layout(
-            q_samples, i_samples, repeat_times=self.channel_count)
+            i_samples, q_samples, repeat_times=self.channel_count)
 
-    def gen_multi_ch_iq_layout(self, q_samples, i_samples, repeat_times=4):
-        multi_ch_q = np.repeat(q_samples, repeat_times)
+    def gen_multi_ch_iq_layout(self, i_samples, q_samples, repeat_times=4):
         multi_ch_i = np.repeat(i_samples, repeat_times)
+        multi_ch_q = np.repeat(q_samples, repeat_times)
         multi_ch_layout = np.vstack((multi_ch_q, multi_ch_i))
         multi_ch_layout = multi_ch_layout.T.flatten()
         return multi_ch_layout
