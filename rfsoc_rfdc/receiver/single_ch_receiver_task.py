@@ -29,7 +29,7 @@ class SingleChReceiverTask(OverlayTask):
         # Receiver datapath parameters
         self.fifo_size = fifo_size
         self.samples_per_axis_stream = samples_per_axis_stream
-        self.packet_size = int(1e3)
+        self.packet_size = int(32768)
         # Initialize plotters
         self.complex_plotter = ComplexSignalPlotter()
         dac_samp_rate = ZCU216_CONFIG['DACSampleRate'] / \
@@ -38,10 +38,10 @@ class SingleChReceiverTask(OverlayTask):
 
         # Hardware IPs
         self.dma_ip = [
-            self.ol.adc_datapath.t226.axi_dma
+            self.ol.adc_datapath.t226.data_mover_ctrl
         ]
         self.pkt_generator_ip = [
-            self.ol.adc_datapath.t226.adc_packet_generator
+            # self.ol.adc_datapath.t226.adc_packet_generator
         ]
         self.fifo_count_ip = [
             AxiGPIO(
@@ -116,17 +116,17 @@ class SingleChReceiverTask(OverlayTask):
 
     def run(self):
         # Set packet size for all ADC channels and enable each of them
-        for pkg_gen in self.pkt_generator_ip:
-            pkg_gen.packetsize = self.packet_size
-            pkg_gen.enable()
+        # for pkg_gen in self.pkt_generator_ip:
+        #     pkg_gen.packetsize = self.packet_size
+        #     pkg_gen.enable()
 
         while self.task_state != TASK_STATE["STOP"]:
             if self.task_state == TASK_STATE["RUNNING"]:
                 # Initiate DMA transfer
                 self.rx_channels[0].transfer()
-                self.rx_channels[0].wait()
                 iq_data = self.rx_channels[0].data
+                time.sleep(1)
                 # IQ sample handler
                 self.sample_handler(iq_data)
             else:
-                time.sleep(0.1)
+                time.sleep(1)

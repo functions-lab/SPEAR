@@ -10,10 +10,13 @@ class RxChannel:
         self.rx_buff_size = buff_size
         self.rx_buff = allocate(shape=(self.rx_buff_size,),
                                 dtype=MyRFdcType.DATA_PATH_DTYPE)
-        self.rx_dma = RxDmaMonitor(dma_ip=dma_ip,
-                                   fifo_count_ip=fifo_count_ip)
+        self.rx_dma = dma_ip
         self.warning_cnt = 0
         self.debug_mode = debug_mode
+        # Config FIFO count IP
+        self.fifo_count = fifo_count_ip
+        self.fifo_count.setdirection("in")
+        self.fifo_count.setlength(32)
 
     def transfer(self):
         # Clear buffer

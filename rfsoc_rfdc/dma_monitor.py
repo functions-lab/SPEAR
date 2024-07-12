@@ -32,7 +32,7 @@ class DmaMonitor(ABC):
         pass
 
 
-class TxStreamingDmaV1(DefaultIP):
+class StreamingDmaV1(DefaultIP):
 
     MASK_32b = 0xFFFFFFFF
     MAX_BTT = 0x7FFFFF
@@ -41,7 +41,6 @@ class TxStreamingDmaV1(DefaultIP):
 
     def __init__(self, description):
         super().__init__(description=description)
-        self._btt = 1  # Make sure BTT cannot be zero
 
     bindto = ['user.org:user:data_mover_ctrl:1.0']
 
@@ -114,21 +113,19 @@ class TxStreamingDmaV2(DefaultIP):
     MASK_32b = 0xFFFFFFFF
     MAX_BTT = 0x7FFFFF
     BTT_MASK = 0x7FFFFF  # 23b
-    _FSM_LUT = ['S_IDLE', 'S_STREAM', 'S_ERROR', 'S_SINGLE']
-    _CMD_LUT = ['CMD_SINGLE', 'CMD_STREAM', 'CMD_STOP']
+    _FSM_LUT = ['S_IDLE', 'S_STREAM', 'S_HALT', 'S_HALT_RST', 'S_ERROR']
 
     def __init__(self, description):
         super().__init__(description=description)
-        self._btt = 1  # Make sure BTT cannot be zero
 
     bindto = ['user.org:user:data_mover_ctrl:2.0']
 
     @property
-    def _cmd(self):
+    def _start(self):
         return self.read(0x00)
 
-    @_cmd.setter
-    def _cmd(self, value):
+    @_start.setter
+    def _start(self, value):
         self.write(0x00, value)
 
     @property
@@ -159,56 +156,32 @@ class TxStreamingDmaV2(DefaultIP):
     def _state(self):
         return self.read(0x10)
 
-    def set_buffer(self, buffer):
-        print(self._debug())
-        addr, nbytes = buffer.physical_address, buffer.nbytes
+    def state(self):
+        return self._FSM_LUT[self._state]
+
+    def _config(self, addr, nbytes):
         self._base_addr_lower = addr & self.MASK_32b
         self._base_addr_upper = (addr >> 32) & self.MASK_32b
         if nbytes > self.MAX_BTT:
             raise ValueError(
                 f"Number of bytes to transfer is too large. Shall be smaller than {self.MAX_BTT} bytes")
         self._btt = nbytes & self.BTT_MASK
-        print(self._debug())
-
-    def _set_cmd(self, cmd):
-        try:
-            index = self._CMD_LUT.index(cmd)
-            print(f"command {cmd} index {index}")
-            self._cmd = index
-            print(f"written to {index}")
-        except:
-            raise ValueError(
-                f"Invalid command {cmd}. Valid commands are {self._CMD_LUT}")
-
-    def _get_cmd(self):
-        return self._CMD_LUT[self._cmd]
-
-    def state(self):
-        return self._FSM_LUT[self._state]
 
     def transfer(self, buffer):
-        self.set_buffer(buffer)
-        self._set_cmd('CMD_SINGLE')
-
-    def wait(self):
-        while True:
-            state = self.state()
-            if state == 'S_IDLE':
-                break
-            if state == 'S_ERROR':
-                raise ValueError(f"Error in DMA transfer.")
-
-    def start(self):
-        self._set_cmd('CMD_STREAM')
+        self._config(buffer.physical_address, buffer.nbytes)
+        self._start = 1
 
     def stop(self):
-        self._set_cmd('CMD_STOP')
+        self._start = 0
 
-    def _debug(self):
+    def get_debug_info(self):
         base_addr = ((self._base_addr_upper & self.MASK_32b) <<
                      32) | (self._base_addr_lower & self.MASK_32b)
-        debug_info = f"Command = {self._cmd}, BTT = {self._btt}, base_addr = {base_addr}, state = {self.state()}"
+        debug_info = f"start = {self._start}, btt = {self._btt}, base_addr = {base_addr}, state = {self.state()}"
         return debug_info
+
+    def __del__(self):
+        self._start = 0
 
 
 class TxDmaMonitor(DmaMonitor):
@@ -220,9 +193,8 @@ class TxDmaMonitor(DmaMonitor):
 
     def stop(self):
         pass
+
 # Define the class for reception DMA monitor
-
-
 class RxDmaMonitor(DmaMonitor):
     def transfer(self, buffer):
         self.dma.recvchannel.transfer(buffer)
