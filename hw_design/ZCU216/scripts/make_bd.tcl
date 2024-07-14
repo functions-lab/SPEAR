@@ -20,7 +20,7 @@ set_property ip_repo_paths $iprepo_dir [current_project]
 update_ip_catalog
 
 # Add constraints
-# add_files -fileset constrs_1 -norecurse ./constraints.xdc
+add_files -fileset constrs_1 -norecurse $iprepo_dir/zcu216_master.xdc
 
 # Make block design
 source ./${design_name}.tcl
