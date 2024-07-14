@@ -108,7 +108,7 @@ class StreamingDmaV1(DefaultIP):
         self.stop()
 
 
-class TxStreamingDmaV2(DefaultIP):
+class StreamingDmaV2(DefaultIP):
 
     MASK_32b = 0xFFFFFFFF
     MAX_BTT = 0x7FFFFF
@@ -195,6 +195,8 @@ class TxDmaMonitor(DmaMonitor):
         pass
 
 # Define the class for reception DMA monitor
+
+
 class RxDmaMonitor(DmaMonitor):
     def transfer(self, buffer):
         self.dma.recvchannel.transfer(buffer)

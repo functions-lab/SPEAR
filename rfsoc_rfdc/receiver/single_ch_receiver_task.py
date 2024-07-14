@@ -40,9 +40,6 @@ class SingleChReceiverTask(OverlayTask):
         self.dma_ip = [
             self.ol.adc_datapath.t226.data_mover_ctrl
         ]
-        self.pkt_generator_ip = [
-            # self.ol.adc_datapath.t226.adc_packet_generator
-        ]
         self.fifo_count_ip = [
             AxiGPIO(
                 self.ol.ip_dict['adc_datapath/t226/fifo_count']).channel1
@@ -58,6 +55,7 @@ class SingleChReceiverTask(OverlayTask):
                     channel_id=ch_idx,
                     dma_ip=self.dma_ip[ch_idx],
                     fifo_count_ip=self.fifo_count_ip[ch_idx],
+                    target_device=self.ol.ddr4_0,
                     buff_size=self.packet_size * self.samples_per_axis_stream + buffer_margin,
                     debug_mode=False
                 )
@@ -115,17 +113,12 @@ class SingleChReceiverTask(OverlayTask):
         # logging.info(f"packet handler takes {elapse / 1e9} to complete")
 
     def run(self):
-        # Set packet size for all ADC channels and enable each of them
-        # for pkg_gen in self.pkt_generator_ip:
-        #     pkg_gen.packetsize = self.packet_size
-        #     pkg_gen.enable()
-
         while self.task_state != TASK_STATE["STOP"]:
             if self.task_state == TASK_STATE["RUNNING"]:
                 # Initiate DMA transfer
                 self.rx_channels[0].transfer()
                 iq_data = self.rx_channels[0].data
-                time.sleep(1)
+                time.sleep(0.01)
                 # IQ sample handler
                 self.sample_handler(iq_data)
             else:
