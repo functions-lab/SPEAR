@@ -9,8 +9,7 @@ class TxChannel:
     def __init__(self, channel_id, dma_ip, fifo_count_ip, debug_mode=False):
         self.channel_id = channel_id
         self.tx_buff = None
-        self.tx_dma = TxDmaMonitor(dma_ip=dma_ip,
-                                   fifo_count_ip=fifo_count_ip)
+        self.tx_dma = dma_ip
         self.warning_cnt = 0
         self.debug_mode = debug_mode
         # Config FIFO count IP

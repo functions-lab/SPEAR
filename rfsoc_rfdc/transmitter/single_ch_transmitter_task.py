@@ -20,7 +20,7 @@ class SingleChTransmitterTask(OverlayTask):
         self.file_path = file_path
         # Hardware IPs
         self.dma_ip = [
-            self.ol.dac_datapath.t230.axi_dma
+            self.ol.dac_datapath.t230.data_mover_ctrl
         ]
         self.fifo_count_ip = [
             AxiGPIO(
@@ -76,6 +76,7 @@ class SingleChTransmitterTask(OverlayTask):
             if self.task_state == TASK_STATE["RUNNING"]:
                 # Initiate DMA transfer
                 self.tx_channels[0].transfer()
-                self.tx_channels[0].wait()
+                time.sleep(1)
             else:
+                self.tx_channels[0].tx_dma.stop()
                 time.sleep(1)
