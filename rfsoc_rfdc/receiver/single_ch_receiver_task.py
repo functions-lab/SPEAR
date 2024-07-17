@@ -118,7 +118,7 @@ class SingleChReceiverTask(OverlayTask):
                 # Initiate DMA transfer
                 self.rx_channels[0].transfer()
                 iq_data = self.rx_channels[0].data
-                time.sleep(0.01)
+                time.sleep(1)
                 # IQ sample handler
                 self.sample_handler(iq_data)
             else:
