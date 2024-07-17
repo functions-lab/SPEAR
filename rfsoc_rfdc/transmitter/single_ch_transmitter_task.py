@@ -6,7 +6,6 @@ import numpy as np
 import time
 from rfsoc_rfdc.rfdc import MyRFdcType
 from rfsoc_rfdc.matlab_iq_loader import MatlabIqLoader
-from rfsoc_rfdc.dma_monitor import TxStreamingDmaV2
 
 from rfsoc_rfdc.rfdc_config import ZCU216_CONFIG
 
