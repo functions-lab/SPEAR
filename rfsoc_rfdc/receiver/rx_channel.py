@@ -24,7 +24,7 @@ class RxChannel:
         self.rx_buff *= 0
 
         if self.debug_mode:
-            fifo_count = self.rx_dma.get_fifo_count()
+            fifo_count = self.fifo_count.read()
 
             # Warning for low FIFO count
             if fifo_count > self.rx_buff_size:
