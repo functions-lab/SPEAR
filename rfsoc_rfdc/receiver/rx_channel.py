@@ -19,10 +19,7 @@ class RxChannel:
         self.fifo_count.setdirection("in")
         self.fifo_count.setlength(32)
 
-    def transfer(self):
-        # Clear buffer
-        self.rx_buff *= 0
-
+    def _monitor_fifo(self):
         if self.debug_mode:
             fifo_count = self.fifo_count.read()
 
@@ -34,11 +31,17 @@ class RxChannel:
                 logging.info(
                     f"[Channel {self.channel_id}] Warning: Rx FIFO count {fifo_count} is larger than buffer size {self.rx_buff_size}. DMA transfer is too slow!")
 
+    def transfer(self):
+        # Monitor FIFO in debug mode
+        self._monitor_fifo()
         # Trigger DMA transfer
         self.rx_dma.transfer(self.rx_buff)
 
-    def wait(self):
-        self.rx_dma.wait()
+    def stream(self, mode='STREAM'):
+        # Monitor FIFO in debug mode
+        self._monitor_fifo()
+        # Trigger DMA transfer
+        self.rx_dma.stream(self.rx_buff)
 
     @property
     def data(self):

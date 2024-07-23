@@ -31,7 +31,7 @@ class TxChannel:
                                 dtype=MyRFdcType.DATA_PATH_DTYPE)
         self.tx_buff[:] = buff[:]
 
-    def transfer(self):
+    def _monitor_fifo(self):
         if self.debug_mode:
             fifo_count = self.fifo_count.read()
 
@@ -43,8 +43,14 @@ class TxChannel:
                 logging.info(
                     f"[Channel {self.channel_id}] Warning: Tx FIFO count {fifo_count} is zero. DMA transfer is too slow!")
 
+    def transfer(self):
+        # Monitor FIFO in debug mode
+        self._monitor_fifo()
         # Trigger DMA transfer
         self.tx_dma.transfer(self.tx_buff)
 
-    def wait(self):
-        self.tx_dma.wait()
+    def stream(self, mode='STREAM'):
+        # Monitor FIFO in debug mode
+        self._monitor_fifo()
+        # Trigger DMA transfer
+        self.tx_dma.stream(self.tx_buff)

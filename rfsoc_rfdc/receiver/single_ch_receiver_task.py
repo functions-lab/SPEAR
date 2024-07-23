@@ -116,7 +116,8 @@ class SingleChReceiverTask(OverlayTask):
         while self.task_state != TASK_STATE["STOP"]:
             if self.task_state == TASK_STATE["RUNNING"]:
                 # Initiate DMA transfer
-                self.rx_channels[0].transfer()
+                self.rx_channels[0].transfer()  # Single transfer mode
+                # self.rx_channels[0].stream() # Streaming transfer mode
                 iq_data = self.rx_channels[0].data
                 time.sleep(1)
                 # IQ sample handler
