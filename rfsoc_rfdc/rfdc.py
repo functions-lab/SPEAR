@@ -317,6 +317,8 @@ class MyRFdc:
             block.MixerSettings = self.rfdc_cfg.dac_block_mixer_cfg
             block.InterpolationFactor = self.rfdc_cfg.dac_block_cfg['InterpolationFactor']
             block.UpdateEvent(self.rfdc_cfg.dac_block_cfg['UpdateEvent'])
+            block.QMCSettings = {'EnablePhase': 0, 'EnableGain': 0, 'GainCorrectionFactor': 0.0,
+                        'PhaseCorrectionFactor': 0.0, 'OffsetCorrectionFactor': 0, 'EventSource': xrfdc.EVNT_SRC_IMMEDIATE}
             logging.info(
                 f"DAC tile {tile.tile_id} DAC block {block_id} is enabled!")
         else:
@@ -347,6 +349,8 @@ class MyRFdc:
             block.MixerSettings = self.rfdc_cfg.adc_block_mixer_cfg
             block.DecimationFactor = self.rfdc_cfg.adc_block_cfg['DecimationFactor']
             block.UpdateEvent(self.rfdc_cfg.adc_block_cfg['UpdateEvent'])
+            block.QMCSettings = {'EnablePhase': 0, 'EnableGain': 0, 'GainCorrectionFactor': 0.0,
+                                 'PhaseCorrectionFactor': 0.0, 'OffsetCorrectionFactor': 0, 'EventSource': xrfdc.EVNT_SRC_IMMEDIATE}
             logging.info(
                 f"ADC tile {tile.tile_id} ADC block {block_id} is enabled!")
         else:
