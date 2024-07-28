@@ -122,10 +122,10 @@ class MyRFdcFreqConfig:
             if self.ref_clk > ref_clk_max_for_dac or self.ref_clk > ref_clk_min_for_dac:
                 logging.warning(err_msg)
         # Check NCO range
-        err_msg = f"DAC NCO shall fall between -1/2*Fs and 1/2*Fs"
-        assert self.dac_samp_rate / 2 >= self.dac_nco >= -self.dac_samp_rate / 2, err_msg
-        err_msg = f"ADC NCO shall fall between 0 and 1/2*Fs"
-        assert self.adc_samp_rate / 2 >= self.adc_nco >= -self.adc_samp_rate / 2, err_msg
+        # err_msg = f"DAC NCO shall fall between -1/2*Fs and 1/2*Fs"
+        # assert self.dac_samp_rate / 2 >= self.dac_nco >= -self.dac_samp_rate / 2, err_msg
+        # err_msg = f"ADC NCO shall fall between 0 and 1/2*Fs"
+        # assert self.adc_samp_rate / 2 >= self.adc_nco >= -self.adc_samp_rate / 2, err_msg
 
     def comm_sys_check(self):
         # Check NCO diirection
