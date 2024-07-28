@@ -56,6 +56,15 @@ class WaveFormGenerator:
         return wave.astype(MyRFdcType.DATA_PATH_DTYPE)
 
     @staticmethod
+    def generate_ten_sine(scaling_factor=1.0):
+        ten_sine = self.generate_sine_wave(
+            repeat_time=10, sample_pts=10, scaling_factor=scaling_factor)
+        ten_sine = np.append(ten_sine, np.zeros(
+            100, dtype=MyRFdcType.DATA_PATH_DTYPE))
+        wave = np.append(ten_sine, ten_sine)
+        return wave
+
+    @staticmethod
     def generate_zadoff_chu_wave(repeat_time=1, sample_pts=1000, scaling_factor=1.0):
         u = 1  # Root index of the the ZC sequence
         seq_length = sample_pts * repeat_time
