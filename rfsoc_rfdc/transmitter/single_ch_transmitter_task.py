@@ -5,7 +5,7 @@ from pynq.lib import AxiGPIO
 import numpy as np
 import time
 from rfsoc_rfdc.rfdc import MyRFdcType
-from rfsoc_rfdc.matlab_iq_loader import MatlabIqLoader
+from rfsoc_rfdc.iq_loader import MatlabIqLoader, NumpyIqLoader
 
 from rfsoc_rfdc.rfdc_config import ZCU216_CONFIG
 
@@ -39,22 +39,15 @@ class SingleChTransmitterTask(OverlayTask):
                 )
             )
 
-        # Initialize MatlabIqLoader
-        self.matlab_loader = MatlabIqLoader(
-            file_path=self.file_path, key="wave")
-        self.matlab_loader.load_matlab_waveform()
-
-        # Scale the waveform
-        # self.matlab_loader.scale_waveform(
-        #     MyRFdcType.DAC_MIN_SCALE, MyRFdcType.DAC_MAX_SCALE, wave_scaling_factor=ZCU216_CONFIG['DAC_SCALING_FACTOR'])
-        # self.i_samples, self.q_samples = self.matlab_loader.get_iq_samples(
-        #     repeat_times=1)
-
-        # Generate iq samples for a tone
-        self.i_samples = WaveFormGenerator.generate_sine_wave(
-            repeat_time=1000, sample_pts=10, scaling_factor=ZCU216_CONFIG['DAC_SCALING_FACTOR'])
-        self.q_samples = WaveFormGenerator.generate_no_wave(
-            repeat_time=1000, sample_pts=10, scaling_factor=ZCU216_CONFIG['DAC_SCALING_FACTOR'])
+        # Load IQ samples from a .npy or .mat file
+        if self.file_path.endswith('.npy'):
+            loader = NumpyIqLoader(self.file_path)
+            self.i_samples, self.q_samples = loader.get_iq()
+        elif self.file_path.endswith('.mat'):
+            loader = MatlabIqLoader(self.file_path, key='wave')
+            self.i_samples, self.q_samples = loader.get_iq()
+        else:
+            raise Exception(f"File {self.file_path} is not supported.")
 
         # Generate binary sequence
         # self.i_samples = WaveFormGenerator.generate_binary_seq(

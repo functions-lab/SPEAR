@@ -5,7 +5,7 @@ import numpy as np
 import time
 
 from rfsoc_rfdc.rfdc import MyRFdcType
-from rfsoc_rfdc.matlab_iq_loader import MatlabIqLoader
+from rfsoc_rfdc.iq_loader import MatlabIqLoader
 
 
 class MultiChTransmitterTask(OverlayTask):
