@@ -13,6 +13,8 @@ import socket
 import time
 import threading
 
+from rfsoc_rfdc.dsp.detection import WIFI_OFDM_SCHEME, DETECTION_SCHEME
+
 
 class SingleChRxTask(OverlayTask):
     """Single-Channel ADC"""
@@ -100,7 +102,7 @@ class SingleChRxTask(OverlayTask):
             target=self.fft_plotter.update_plot, args=(iq_data,))
         # Save IQ samples to file thd
         log_thd = threading.Thread(
-            target=self.data_logging_handler, args=(iq_data, "./iq_data.npy"))
+            target=self.data_logging_handler, args=(iq_data, DETECTION_SCHEME.rx_file))
         # TCP real/imag samples thd
         tcp_thd = threading.Thread(target=self.tcp_handler, args=(iq_data,))
 
@@ -115,12 +117,18 @@ class SingleChRxTask(OverlayTask):
     def run(self):
         while self.task_state != TASK_STATE["STOP"]:
             if self.task_state == TASK_STATE["RUNNING"]:
-                # Initiate DMA transfer
+                time.sleep(1)
+                # Initiate DMA transfer after 1s
                 self.rx_channels[0].transfer()  # Single transfer mode
                 # self.rx_channels[0].stream() # Streaming transfer mode
                 iq_data = self.rx_channels[0].data
-                time.sleep(1)
                 # IQ sample handler
                 self.sample_handler(iq_data)
+                # Run DSP pipeline
+                wave_rx = np.load(DETECTION_SCHEME.rx_file)
+                packet_rx, snr, cfo = DETECTION_SCHEME.proc_rx(wave_rx)
+                evm, ber = WIFI_OFDM_SCHEME.analyze(
+                    packet_rx, plot=DETECTION_SCHEME.path2wave+"/const_diagram.png")
+                logging.info(f"SNR: {snr}, CFO: {cfo}, EVM: {evm}, BER: {ber}")
             else:
                 time.sleep(1)

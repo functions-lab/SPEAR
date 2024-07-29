@@ -8,15 +8,14 @@ from rfsoc_rfdc.rfdc import MyRFdcType
 from rfsoc_rfdc.iq_loader import MatlabIqLoader, NumpyIqLoader
 
 from rfsoc_rfdc.rfdc_config import ZCU216_CONFIG
+from rfsoc_rfdc.dsp.detection import WIFI_OFDM_SCHEME, DETECTION_SCHEME
 
 
 class SingleChTxTask(OverlayTask):
     """Single-Channel DAC"""
 
-    def __init__(self, overlay, file_path="./wifi_wave.mat"):
+    def __init__(self, overlay):
         super().__init__(overlay, name="SingleChTxTask")
-        # Waveform file name
-        self.file_path = file_path
         # Hardware IPs
         self.dma_ip = [
             self.ol.dac_datapath.t230.data_mover_ctrl
@@ -39,19 +38,21 @@ class SingleChTxTask(OverlayTask):
                 )
             )
 
+        # Tx waveform
+        packet_tx = WIFI_OFDM_SCHEME.generate()
+        wave_tx = DETECTION_SCHEME.proc_tx(packet_tx)
+        np.save(DETECTION_SCHEME.tx_file, wave_tx)
+        self.path_to_tx_file = DETECTION_SCHEME.tx_file
+
         # Load IQ samples from a .npy or .mat file
-        if self.file_path.endswith('.npy'):
-            loader = NumpyIqLoader(self.file_path)
+        if self.path_to_tx_file.endswith('.npy'):
+            loader = NumpyIqLoader(self.path_to_tx_file)
             self.i_samples, self.q_samples = loader.get_iq()
-        elif self.file_path.endswith('.mat'):
-            loader = MatlabIqLoader(self.file_path, key='wave')
+        elif self.path_to_tx_file.endswith('.mat'):
+            loader = MatlabIqLoader(self.path_to_tx_file, key='wave')
             self.i_samples, self.q_samples = loader.get_iq()
         else:
-            raise Exception(f"File {self.file_path} is not supported.")
-
-        # Generate testing sequence
-        # ten_peaks = WaveFormGenerator.generate_ten_sine()
-        # self.i_samples, self.q_samples = ten_peaks, ten_peaks
+            raise Exception(f"File {self.path_to_tx_file} is not supported.")
 
     def run(self):
         # Perform data copy
