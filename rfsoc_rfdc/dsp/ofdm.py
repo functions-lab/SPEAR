@@ -55,7 +55,8 @@ class OFDM:
             speed = 6
         else:
             print('Warning: Modulation NOT Supported!')
-        constel_map_norm = constel_map / np.sqrt(np.mean(np.abs(constel_map)**2))
+        constel_map_norm = constel_map / \
+            np.sqrt(np.mean(np.abs(constel_map)**2))
         return constel_map_norm, speed
 
     def _bit2constel(self, bit, modu):
@@ -105,7 +106,8 @@ class OFDM:
             end_idx = (sym_idx+1) * sym_len
 
             constel_pad = np.zeros((fft_size), dtype=complex)
-            constel_pad[sub_offset: sub_offset+sub_num] = constel_both[sym_idx, :]
+            constel_pad[sub_offset: sub_offset +
+                        sub_num] = constel_both[sym_idx, :]
             wave_orig = np.fft.ifft(np.roll(constel_pad, shift=fft_size//2))
             wave_cp = wave_orig[: cp_len]
             wave_both = np.concatenate((wave_orig, wave_cp), axis=0)
@@ -135,7 +137,8 @@ class OFDM:
             wave_both = wave[start_idx: end_idx]
             wave_orig = wave_both[cp_len//2: cp_len//2+fft_size]
             constel_pad = np.roll(np.fft.fft(wave_orig), shift=-fft_size//2)
-            constel_both[sym_idx, :] = constel_pad[sub_offset: sub_offset+sub_num]
+            constel_both[sym_idx,
+                         :] = constel_pad[sub_offset: sub_offset+sub_num]
 
         bit_head = self.bit_head
         constel_head_gt = np.ones((sub_num), dtype=complex) * np.nan
@@ -158,7 +161,7 @@ class OFDM:
             ax.scatter(np.real(constel_map), np.imag(
                 constel_map), marker='+', s=100)
             fig.savefig(plot)
-            # plt.close(fig)
+            plt.close(fig)
         sub_offset = int(np.floor((fft_size - sub_num) / 2))
         bit_data = np.ones((sym_num, sub_num, speed)) * np.nan
         evm_all = []
@@ -171,7 +174,8 @@ class OFDM:
         evm_all = np.array(evm_all)
         evm = np.sqrt(np.mean(np.abs(evm_all) ** 2))
         bit_data_gt = self.bit_data
-        ber = np.sum(np.logical_xor(bit_data, bit_data_gt)) / sym_num / sub_num / speed
+        ber = np.sum(np.logical_xor(bit_data, bit_data_gt)) / \
+            sym_num / sub_num / speed
 
         return evm, ber
 
