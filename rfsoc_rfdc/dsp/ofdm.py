@@ -153,6 +153,7 @@ class OFDM:
 
         constel_data = constel_both[1: -1, :] / csi_amp
         if plot is not None:
+            plt.ioff()
             fig, ax = plt.subplots()
             constel_map, speed = self._get_constel_map(modu)
             ax.scatter(

@@ -170,6 +170,7 @@ class Detection:
         signal = self._get_energy(packet_rx) - noise
         snr = 10 * np.log10(signal / noise)
 
+        plt.ioff()
         fig, ax = plt.subplots()
         ax.plot(np.arange(cap_num * wave_len), 20 *
                 np.log10(np.abs(wave_rx) + 1e-10))
