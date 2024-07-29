@@ -14,11 +14,11 @@ import time
 import threading
 
 
-class SingleChReceiverTask(OverlayTask):
+class SingleChRxTask(OverlayTask):
     """Single-Channel ADC"""
 
     def __init__(self, overlay, samples_per_axis_stream=8, fifo_size=32768):
-        super().__init__(overlay, name="SingleChReceiverTask")
+        super().__init__(overlay, name="SingleChRxTask")
         # TCP socket
         self.server_config = ("server.local", 1234)
         # Make sure to bind this domain name to the IP address of your ADC sample plotting server
@@ -104,9 +104,9 @@ class SingleChReceiverTask(OverlayTask):
         # TCP real/imag samples thd
         tcp_thd = threading.Thread(target=self.tcp_handler, args=(iq_data,))
 
-        for thd in [fft_thd, plot_thd]:
+        for thd in [fft_thd, plot_thd, log_thd]:
             thd.start()
-        for thd in [fft_thd, plot_thd]:
+        for thd in [fft_thd, plot_thd, log_thd]:
             thd.join()
 
         elapse = time.time_ns() - start_t

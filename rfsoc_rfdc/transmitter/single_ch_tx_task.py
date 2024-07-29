@@ -10,11 +10,11 @@ from rfsoc_rfdc.iq_loader import MatlabIqLoader, NumpyIqLoader
 from rfsoc_rfdc.rfdc_config import ZCU216_CONFIG
 
 
-class SingleChTransmitterTask(OverlayTask):
+class SingleChTxTask(OverlayTask):
     """Single-Channel DAC"""
 
     def __init__(self, overlay, file_path="./wifi_wave.mat"):
-        super().__init__(overlay, name="SingleChTransmitterTask")
+        super().__init__(overlay, name="SingleChTxTask")
         # Waveform file name
         self.file_path = file_path
         # Hardware IPs

@@ -10,11 +10,11 @@ import time
 import numpy as np
 
 
-class MultiChReceiverTask(OverlayTask):
+class MultiChRxTask(OverlayTask):
     """Multi-Channel ADC"""
 
     def __init__(self, overlay, samples_per_axis_stream=8, fifo_size=32768, channel_count=4):
-        super().__init__(overlay, name="MultiChReceiverTask")
+        super().__init__(overlay, name="MultiChRxTask")
         # Throughput timer
         self.timer = ThroughputTimer()
         # Number of ADCs controlled by a DMA
