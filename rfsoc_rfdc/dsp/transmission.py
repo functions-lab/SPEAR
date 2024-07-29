@@ -6,198 +6,191 @@ import shutil
 from ofdm import OFDM
 
 
-class Transmission():
+class Transmission:
+    """Class for handling transmission-related operations."""
+
     def __init__(self):
         super(Transmission, self).__init__()
+        # Check path to waveform
+        file_dir = os.path.dirname(__file__)
+        self.path2wave = os.path.join(os.path.dirname(file_dir), "../../wave_files")
+        if os.path.exists(self.path2wave):
+            shutil.rmtree(self.path2wave)
+        os.mkdir(self.path2wave)
+        # Tx/Rx file name
+        self.tx_file = os.path.join(self.path2wave, 'Tx.npy')
+        self.rx_file =os.path.join(self.path2wave, 'Rx.npy')
+        # Preamble detection
+        self.detection_file = os.path.join(self.path2wave, 'detection.png')
 
-    def __CheckSaturation__(self, packet, threshold=1):
-        ratio = sum(np.abs(packet) > threshold)/np.shape(packet)[0]
+    def _check_saturation(self, packet, threshold=1):
+        """Check if the packet is saturated."""
+        ratio = np.sum(np.abs(packet) > threshold) / np.shape(packet)[0]
         if ratio > 0:
-            print('Warning: Packet Saturated for '+str(ratio*100)+'%')
+            print(f'Warning: Packet Saturated for {ratio*100:.2f}%')
 
-    def __Wave2File__(self, wave, fileName):
-        np.save(fileName, wave)
+    def _wave_to_file(self, wave, file_name):
+        """Save wave data to a file."""
+        np.save(file_name, wave)
 
-    def __File2Wave__(self, fileName):
-        wave = np.load(fileName)
-        return wave
+    def _file_to_wave(self, file_name):
+        """Load wave data from a file."""
+        return np.load(file_name)
 
-    def __ZadoffDetection__(self, wave, winLen, deltaLen, threshold):
-        waveLen = np.shape(wave)[0]
+    def _zadoff_detection(self, wave, win_len, delta_len, threshold):
+        """Perform Zadoff-Chu sequence detection."""
+        wave_len = np.shape(wave)[0]
         neighbor = 10
 
-        corrAll = np.ones((waveLen-deltaLen-winLen+1)) * np.nan
+        corr_all = np.ones((wave_len - delta_len - win_len + 1)) * np.nan
 
-        zadoff_1 = wave[: winLen]
-        zadoff_2 = wave[deltaLen: deltaLen+winLen]
+        zadoff_1 = wave[:win_len]
+        zadoff_2 = wave[delta_len:delta_len + win_len]
         product = np.sum(zadoff_1 * np.conj(zadoff_2))
         sum_1 = np.sum(zadoff_1)
         sum_2 = np.sum(zadoff_2)
         energy_1 = np.sum(np.abs(zadoff_1)**2)
         energy_2 = np.sum(np.abs(zadoff_2)**2)
-        corrAll[0] = \
-            np.abs(product-sum_1*np.conj(sum_2)/winLen) / \
-            np.sqrt((energy_1-np.abs(sum_1)**2/winLen)
-                    * (energy_2-np.abs(sum_2)**2/winLen))
-        for offset in range(waveLen-deltaLen-winLen):
-            iqIn_1 = wave[offset+winLen]
-            iqIn_2 = wave[offset+deltaLen+winLen]
-            iqOut_1 = wave[offset]
-            iqOut_2 = wave[offset+deltaLen]
+        corr_all[0] = (
+            np.abs(product - sum_1 * np.conj(sum_2) / win_len) /
+            np.sqrt((energy_1 - np.abs(sum_1)**2 / win_len) *
+                    (energy_2 - np.abs(sum_2)**2 / win_len))
+        )
 
-            sum_1 = sum_1 - iqOut_1 + iqIn_1
-            sum_2 = sum_2 - iqOut_2 + iqIn_2
-            product = product - iqOut_1 * \
-                np.conj(iqOut_2) + iqIn_1*np.conj(iqIn_2)
-            energy_1 = energy_1 - np.abs(iqOut_1)**2 + abs(iqIn_1)**2
-            energy_2 = energy_2 - np.abs(iqOut_2)**2 + abs(iqIn_2)**2
-            corr = \
-                np.abs(product-sum_1*np.conj(sum_2)/winLen) / \
-                np.sqrt((energy_1-np.abs(sum_1)**2/winLen)
-                        * (energy_2-np.abs(sum_2)**2/winLen))
-            corrAll[offset+1] = corr
+        for offset in range(wave_len - delta_len - win_len):
+            iq_in_1 = wave[offset + win_len]
+            iq_in_2 = wave[offset + delta_len + win_len]
+            iq_out_1 = wave[offset]
+            iq_out_2 = wave[offset + delta_len]
 
-        offsetList = []
-        corrList = []
-        for offset in range(neighbor, waveLen-deltaLen-winLen+1-neighbor):
-            corr = corrAll[offset]
+            sum_1 = sum_1 - iq_out_1 + iq_in_1
+            sum_2 = sum_2 - iq_out_2 + iq_in_2
+            product = (product - iq_out_1 * np.conj(iq_out_2) +
+                       iq_in_1 * np.conj(iq_in_2))
+            energy_1 = energy_1 - np.abs(iq_out_1)**2 + abs(iq_in_1)**2
+            energy_2 = energy_2 - np.abs(iq_out_2)**2 + abs(iq_in_2)**2
+            corr = (
+                np.abs(product - sum_1 * np.conj(sum_2) / win_len) /
+                np.sqrt((energy_1 - np.abs(sum_1)**2 / win_len) *
+                        (energy_2 - np.abs(sum_2)**2 / win_len))
+            )
+            corr_all[offset + 1] = corr
+
+        offset_list = []
+        corr_list = []
+        for offset in range(neighbor, wave_len - delta_len - win_len + 1 - neighbor):
+            corr = corr_all[offset]
             if corr > threshold:
-                if corr < np.max(corrAll[offset-neighbor-1: offset-1]):
+                if corr < np.max(corr_all[offset - neighbor - 1:offset - 1]):
                     continue
-                if corr < np.max(corrAll[offset: offset+neighbor]):
+                if corr < np.max(corr_all[offset:offset + neighbor]):
                     continue
-                offsetList.append(offset)
-                corrList.append(corr)
+                offset_list.append(offset)
+                corr_list.append(corr)
 
-        return offsetList, corrList
+        return offset_list, corr_list
 
-    def __GetEnergy__(self, wave):
-        waveCal = wave  # - np.mean(wave)
-        energy = np.mean(np.abs(waveCal)**2)
+    def _get_energy(self, wave):
+        """Calculate the energy of the wave."""
+        wave_cal = wave  # - np.mean(wave)
+        energy = np.mean(np.abs(wave_cal)**2)
         return energy
 
-    def Tx2Rx(self, packetTx, sampleRate=50e6):
-        thisPath = os.getcwd() + '/'
+    def proc_tx(self, packet_tx, sample_rate=50e6):
+        """Transmit to receive operation."""
+        self._check_saturation(packet_tx)
+        packet_len = np.shape(packet_tx)[0]
+        pad_len = 10000  # int(max(1e-3*sample_rate, round(0.1*packet_len)))
+        cap_num = 3
+        noise_num = 1000
+        zadoff_set = [139, 839]  # ascent
 
-        self.__CheckSaturation__(packetTx)
-        packetLen = np.shape(packetTx)[0]
-        padLen = 10000  # int(max(1e-3*sampleRate, round(0.1*packetLen)))
-        capNum = 3
-        noiseNum = 1000
-        zadoffSet = [139, 839]  # ascent
-
-        bufferPath = thisPath+"Buffer/"
-        if os.path.isdir(bufferPath):
-            shutil.rmtree(bufferPath)
-        os.mkdir(bufferPath)
-
-        headTx = np.zeros((sum(zadoffSet)*3), dtype=np.complex64)
+        head_tx = np.zeros((sum(zadoff_set) * 3), dtype=np.complex64)
         offset = 0
-        for zadoffLen in zadoffSet:
-            zadoffSingle = np.exp(1j*2*np.pi*np.random.rand(1, zadoffLen))
-            zadoffDouble = np.tile(zadoffSingle, 2)
-            headTx[offset: offset+2*zadoffLen] = zadoffDouble
-            offset += 3 * zadoffLen
-        headLen = sum(zadoffSet)*3
+        for zadoff_len in zadoff_set:
+            zadoff_single = np.exp(1j * 2 * np.pi * np.random.rand(1, zadoff_len))
+            zadoff_double = np.tile(zadoff_single, 2)
+            head_tx[offset:offset + 2 * zadoff_len] = zadoff_double
+            offset += 3 * zadoff_len
+        head_len = sum(zadoff_set) * 3
+        pad_tx = np.zeros((pad_len))
+        wave_tx = np.concatenate((pad_tx, head_tx, packet_tx, pad_tx), axis=0)
+        wave_len = 2 * pad_len + head_len + packet_len
+        self._wave_to_file(wave_tx, self.tx_file)
 
-        padTx = np.zeros((padLen))
-
-        waveTx = np.concatenate((padTx, headTx, packetTx, padTx), axis=0)
-        fileTxStr = bufferPath+'Tx.npy'
-
-        self.__Wave2File__(waveTx, fileTxStr)
-        waveLen = 2*padLen + headLen + packetLen
-
-        fileRxStr = './iq_data.npy'
+    def proc_rx(self, sample_rate=50e6):
 
         while True:
-            waveTemp = self.__File2Wave__(fileRxStr)
-            waveRx = waveTemp[-capNum*waveLen:]
+            wave_temp = self._file_to_wave(self.rx_file)
+            wave_rx = wave_temp[-cap_num * wave_len:]
 
-            offsetList, corrList = self.__ZadoffDetection__(
-                waveRx[: waveLen], zadoffSet[-1], zadoffSet[-1], 0.7)
-            offsetListAfter, _ = self.__ZadoffDetection__(
-                waveRx[waveLen: 2*waveLen], zadoffSet[-1], zadoffSet[-1], 0.7)
-            if (len(offsetList) == 0) or (len(offsetListAfter) == 0):
+            offset_list, corr_list = self._zadoff_detection(
+                wave_rx[:wave_len], zadoff_set[-1], zadoff_set[-1], 0.7)
+            offset_list_after, _ = self._zadoff_detection(
+                wave_rx[wave_len:2 * wave_len], zadoff_set[-1], zadoff_set[-1], 0.7)
+            if (not offset_list) or (not offset_list_after):
                 continue
-            offsetIdx = np.argmax(np.array(corrList))
-            offsetZadoff = offsetList[offsetIdx]-3*sum(zadoffSet[: -1])
-            offsetPacket = offsetZadoff + headLen
-            if offsetZadoff <= 0:
+            offset_idx = np.argmax(np.array(corr_list))
+            offset_zadoff = offset_list[offset_idx] - 3 * sum(zadoff_set[:-1])
+            offset_packet = offset_zadoff + head_len
+            if offset_zadoff <= 0:
                 continue
             break
 
-        cfoSet = []
-        offset = offsetZadoff
-        for zadoffLen in zadoffSet:
-            zadoff_1 = waveRx[offset: offset+zadoffLen]
-            zadoff_2 = waveRx[offset+zadoffLen: offset+2*zadoffLen]
+        cfo_set = []
+        offset = offset_zadoff
+        for zadoff_len in zadoff_set:
+            zadoff_1 = wave_rx[offset:offset + zadoff_len]
+            zadoff_2 = wave_rx[offset + zadoff_len:offset + 2 * zadoff_len]
 
-            # fig, ax = plt.subplots()
-            # ax.plot(np.arange(capNum*waveLen), 20*np.log10(np.abs(waveRx)+1e-10))
-            # ax.vlines(offset, ymin=-1e10, ymax=+1e10)
-            # ax.vlines(offset+zadoffLen, ymin=-1e10, ymax=+1e10)
-            # ax.vlines(offset+2*zadoffLen, ymin=-1e10, ymax=+1e10)
-            # ax.set_ylim(bottom=0, top=100)
-            # ax.set_xlim(left=0, right=waveLen)
-            # fig.savefig(bufferPath+'CFO.png')
-            # plt.close(fig)
-            # exit()
+            cfo_temp = (-sample_rate / zadoff_len *
+                        np.angle(np.sum(zadoff_1 * np.conj(zadoff_2))) / 2 / np.pi)
+            cfo_set.append(cfo_temp)
+            offset += 3 * zadoff_len
 
-            cfoTemp = -sampleRate/zadoffLen * \
-                np.angle(np.sum(zadoff_1 * np.conj(zadoff_2)))/2/np.pi
-            cfoSet.append(cfoTemp)
-            offset += 3*zadoffLen
+            wave_rx[offset_zadoff:offset_zadoff + head_len] = (
+                wave_rx[offset_zadoff:offset_zadoff + head_len] *
+                np.exp(-1j * 2 * np.pi * np.arange(head_len) / sample_rate * cfo_temp)
+            )
+        cfo = sum(cfo_set)
+        packet_rx = wave_rx[offset_packet:offset_packet + packet_len]
+        packet_rx = packet_rx * np.exp(-1j * 2 * np.pi * np.arange(packet_len) / sample_rate * cfo)
 
-            waveRx[offsetZadoff: offsetZadoff+headLen] = \
-                waveRx[offsetZadoff: offsetZadoff+headLen] * \
-                np.exp(-1j*2*np.pi*np.arange(headLen)/sampleRate*cfoTemp)
-        cfo = sum(cfoSet)
-        packetRx = waveRx[offsetPacket: offsetPacket+packetLen]
-        packetRx = packetRx * \
-            np.exp(-1j*2*np.pi*np.arange(packetLen)/sampleRate*cfo)
-
-        noiseList = []
-        for noiseIdx in range(noiseNum):
-            startIdx = round(capNum*waveLen/noiseNum*noiseIdx)
-            endIdx = round(capNum*waveLen/noiseNum*noiseIdx) + \
-                int(np.ceil(100))
-            noiseSym = waveRx[startIdx: endIdx]
-            noise = self.__GetEnergy__(noiseSym)
-            noiseList.append(noise)
-        noise = np.percentile(noiseList, 10)
-        signal = self.__GetEnergy__(packetRx) - noise
-        snr = 10 * np.log10(signal/noise)
+        noise_list = []
+        for noise_idx in range(noise_num):
+            start_idx = round(cap_num * wave_len / noise_num * noise_idx)
+            end_idx = round(cap_num * wave_len / noise_num * noise_idx) + int(np.ceil(100))
+            noise_sym = wave_rx[start_idx:end_idx]
+            noise = self._get_energy(noise_sym)
+            noise_list.append(noise)
+        noise = np.percentile(noise_list, 10)
+        signal = self._get_energy(packet_rx) - noise
+        snr = 10 * np.log10(signal / noise)
 
         fig, ax = plt.subplots()
-        ax.plot(np.arange(capNum*waveLen), 20*np.log10(np.abs(waveRx)+1e-10))
-        ax.vlines(offsetZadoff, ymin=-1e10, ymax=+1e10)
-        ax.vlines(offsetPacket, ymin=-1e10, ymax=+1e10)
-        ax.vlines(offsetPacket+packetLen, ymin=-1e10, ymax=+1e10)
+        ax.plot(np.arange(cap_num * wave_len), 20 * np.log10(np.abs(wave_rx) + 1e-10))
+        ax.vlines(offset_zadoff, ymin=-1e10, ymax=+1e10)
+        ax.vlines(offset_packet, ymin=-1e10, ymax=+1e10)
+        ax.vlines(offset_packet + packet_len, ymin=-1e10, ymax=+1e10)
         ax.set_ylim(bottom=0, top=100)
-        ax.set_title('SNR: '+str(snr)+'dB CFO:'+str(cfo)+'Hz')
-        fig.savefig(bufferPath+'detection.png')
-        plt.close(fig)
+        ax.set_title(f'SNR: {snr:.2f}dB CFO:{cfo:.2f}Hz')
+        fig.savefig(detection_file)
+        # plt.close(fig)
 
-        return packetRx, snr, cfo
+        return packet_rx, snr, cfo
 
 
 if __name__ == "__main__":
     np.random.seed(0)
 
     transmission = Transmission()
-    ofdm = OFDM(symNum=100, fftSize=64, subNum=48, modu='16QAM', cpRate=0.25)
-    packetTx = ofdm.Generate()
+    ofdm = OFDM(sym_num=100, fft_size=64, sub_num=48, modu='16QAM', cp_rate=0.25)
+    packet_tx = ofdm.generate()
 
-    fig, ax = plt.subplots()
-    ax.plot(np.arange(np.shape(packetTx)[
-            0]), 20*np.log10(np.abs(np.fft.fftshift(np.fft.fft(packetTx)))+1e-10))
-    fig.savefig('fft.png')
-    plt.close(fig)
-    # exit()
+    transmission.proc_tx(packet_tx * 10, sample_rate=1.25e9)
+    packet_rx, snr, cfo = transmission.proc_rx(sample_rate=1.25e9)
 
-    packetRx, SNR, CFO = transmission.Tx2Rx(packetTx*10, sampleRate=1.25e9)
-    EVM, BER = ofdm.Analyze(packetRx, plot='Constelno.png')
-    print(SNR, CFO)
-    print(EVM, BER)
+    evm, ber = ofdm.analyze(packet_rx, plot='../wave_files/constellation.png')
+    print(snr, cfo)
+    print(evm, ber)
     print('Done!')

@@ -2,176 +2,185 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-class OFDM():
-    def __init__(self, symNum=100, fftSize=64, subNum=48, modu='16QAM', cpRate=0.25):
+class OFDM:
+    """Orthogonal Frequency-Division Multiplexing (OFDM) implementation."""
+
+    def __init__(self, sym_num=100, fft_size=64, sub_num=48, modu='16QAM', cp_rate=0.25):
+        """Initialize OFDM object with given parameters."""
         super(OFDM, self).__init__()
 
-        self.symNum = symNum
-        self.fftSize = fftSize
-        self.subNum = subNum
+        self.sym_num = sym_num
+        self.fft_size = fft_size
+        self.sub_num = sub_num
         self.modu = modu
-        self.cpRate = cpRate
+        self.cp_rate = cp_rate
 
-        _, speed = self.__GetConstelMap__(modu)
-        self.bitHead = np.random.randint(low=0, high=2, size=(subNum, 2))
-        self.bitData = np.random.randint(
-            low=0, high=2, size=(symNum, subNum, speed))
+        _, speed = self._get_constel_map(modu)
+        self.bit_head = np.random.randint(low=0, high=2, size=(sub_num, 2))
+        self.bit_data = np.random.randint(
+            low=0, high=2, size=(sym_num, sub_num, speed))
 
-    def __bin2dec__(self, bin):
+    def _bin2dec(self, bin_num):
+        """Convert binary to decimal."""
         dec = 0
-        for digit in reversed(list(bin)):
+        for digit in reversed(list(bin_num)):
             dec = dec * 2 + digit
         return dec
 
-    def __dec2bin__(self, dec, binLen=None):
-        decTemp = dec
-        bin = []
-        while decTemp > 0:
-            bin.append(decTemp % 2)
-            decTemp //= 2
-        if binLen is not None:
-            while len(bin) < binLen:
-                bin.append(0)
-        bin = np.array(bin)
-        return bin
+    def _dec2bin(self, dec, bin_len=None):
+        """Convert decimal to binary."""
+        dec_temp = dec
+        bin_num = []
+        while dec_temp > 0:
+            bin_num.append(dec_temp % 2)
+            dec_temp //= 2
+        if bin_len is not None:
+            while len(bin_num) < bin_len:
+                bin_num.append(0)
+        bin_num = np.array(bin_num)
+        return bin_num
 
-    def __GetConstelMap__(self, modu):
+    def _get_constel_map(self, modu):
+        """Get constellation map for given modulation."""
         if modu == 'QPSK':
-            constelMap = np.array([1+1j, -1+1j, 1-1j, -1-1j])
+            constel_map = np.array([1+1j, -1+1j, 1-1j, -1-1j])
             speed = 2
         elif modu == '16QAM':
-            constelMap = np.array([
+            constel_map = np.array([
                 1+1j, 1+3j, 3+1j, 3+3j, 1-1j, 1-3j, 3-1j, 3-3j,
                 -1+1j, -1+3j, -3+1j, -3+3j, -1-1j, -1-3j, -3-1j, -3-3j])
             speed = 4
         elif modu == '64QAM':
-            constelMap = np.array([])
+            constel_map = np.array([])
             speed = 6
         else:
             print('Warning: Modulation NOT Supported!')
-        constelMapNorm = constelMap / np.sqrt(np.mean(np.abs(constelMap)**2))
-        return constelMapNorm, speed
+        constel_map_norm = constel_map / np.sqrt(np.mean(np.abs(constel_map)**2))
+        return constel_map_norm, speed
 
-    def __bit2constel__(self, bit, modu):
-        dec = self.__bin2dec__(bit)
-        constelMap, _ = self.__GetConstelMap__(modu)
-        constel = constelMap[dec]
+    def _bit2constel(self, bit, modu):
+        """Convert bit to constellation point."""
+        dec = self._bin2dec(bit)
+        constel_map, _ = self._get_constel_map(modu)
+        constel = constel_map[dec]
         return constel
 
-    def __constel2bit__(self, constel, modu):
-        constelMap, speed = self.__GetConstelMap__(modu)
-        evm = np.min(np.abs(constelMap-constel))
-        dec = np.argmin(np.abs(constelMap-constel))
-        bin = self.__dec2bin__(dec, binLen=speed)
-        return bin, evm
+    def _constel2bit(self, constel, modu):
+        """Convert constellation point to bit."""
+        constel_map, speed = self._get_constel_map(modu)
+        evm = np.min(np.abs(constel_map - constel))
+        dec = np.argmin(np.abs(constel_map - constel))
+        bin_num = self._dec2bin(dec, bin_len=speed)
+        return bin_num, evm
 
-    def Generate(self):
-        symNum = self.symNum
-        fftSize = self.fftSize
-        subNum = self.subNum
+    def generate(self):
+        """Generate OFDM signal."""
+        sym_num = self.sym_num
+        fft_size = self.fft_size
+        sub_num = self.sub_num
         modu = self.modu
-        cpRate = self.cpRate
+        cp_rate = self.cp_rate
 
-        cpLen = int(np.round(cpRate * fftSize))
-        symLen = fftSize + cpLen
-        subOffset = int(np.floor((fftSize - subNum) / 2))
+        cp_len = int(np.round(cp_rate * fft_size))
+        sym_len = fft_size + cp_len
+        sub_offset = int(np.floor((fft_size - sub_num) / 2))
 
-        bitHead = self.bitHead
-        constelHead = np.ones((1, subNum), dtype=complex) * np.nan
-        for subIdx in range(subNum):
-            constelHead[0, subIdx] = self.__bit2constel__(
-                bitHead[subIdx, :], modu='QPSK')
-        bitData = self.bitData
-        constelData = np.zeros((symNum, subNum), dtype=complex)
-        for symIdx in range(symNum):
-            for subIdx in range(subNum):
-                constelData[symIdx, subIdx] = self.__bit2constel__(
-                    bitData[symIdx, subIdx, :], modu=modu)
-        constelBoth = np.concatenate(
-            (constelHead, constelData, constelHead), axis=0)
+        bit_head = self.bit_head
+        constel_head = np.ones((1, sub_num), dtype=complex) * np.nan
+        for sub_idx in range(sub_num):
+            constel_head[0, sub_idx] = self._bit2constel(
+                bit_head[sub_idx, :], modu='QPSK')
+        bit_data = self.bit_data
+        constel_data = np.zeros((sym_num, sub_num), dtype=complex)
+        for sym_idx in range(sym_num):
+            for sub_idx in range(sub_num):
+                constel_data[sym_idx, sub_idx] = self._bit2constel(
+                    bit_data[sym_idx, sub_idx, :], modu=modu)
+        constel_both = np.concatenate(
+            (constel_head, constel_data, constel_head), axis=0)
 
-        wave = np.ones(((symNum+2)*symLen), dtype=complex) * np.nan
-        for symIdx in range(symNum+2):
-            startIdx = symIdx * symLen
-            endIdx = (symIdx+1) * symLen
+        wave = np.ones(((sym_num+2)*sym_len), dtype=complex) * np.nan
+        for sym_idx in range(sym_num+2):
+            start_idx = sym_idx * sym_len
+            end_idx = (sym_idx+1) * sym_len
 
-            constelPad = np.zeros((fftSize), dtype=complex)
-            constelPad[subOffset: subOffset+subNum] = constelBoth[symIdx, :]
-            waveOrig = np.fft.ifft(np.roll(constelPad, shift=fftSize//2))
-            waveCP = waveOrig[: cpLen]
-            waveBoth = np.concatenate((waveOrig, waveCP), axis=0)
-            wave[startIdx: endIdx] = waveBoth
+            constel_pad = np.zeros((fft_size), dtype=complex)
+            constel_pad[sub_offset: sub_offset+sub_num] = constel_both[sym_idx, :]
+            wave_orig = np.fft.ifft(np.roll(constel_pad, shift=fft_size//2))
+            wave_cp = wave_orig[: cp_len]
+            wave_both = np.concatenate((wave_orig, wave_cp), axis=0)
+            wave[start_idx: end_idx] = wave_both
 
-        self.constelBoth = constelBoth
+        self.constel_both = constel_both
 
         return wave
 
-    def Analyze(self, wave, plot=None):
-        symNum = self.symNum
-        fftSize = self.fftSize
-        subNum = self.subNum
+    def analyze(self, wave, plot=None):
+        """Analyze OFDM signal."""
+        sym_num = self.sym_num
+        fft_size = self.fft_size
+        sub_num = self.sub_num
         modu = self.modu
-        cpRate = self.cpRate
+        cp_rate = self.cp_rate
 
-        cpLen = int(np.round(cpRate * fftSize))
-        symLen = fftSize + cpLen
-        subOffset = int(np.floor((fftSize - subNum) / 2))
+        cp_len = int(np.round(cp_rate * fft_size))
+        sym_len = fft_size + cp_len
+        sub_offset = int(np.floor((fft_size - sub_num) / 2))
 
-        constelBoth = np.ones((symNum+2, subNum), dtype=complex) * np.nan
-        for symIdx in range(symNum+2):
-            startIdx = symIdx * symLen
-            endIdx = (symIdx+1) * symLen
+        constel_both = np.ones((sym_num+2, sub_num), dtype=complex) * np.nan
+        for sym_idx in range(sym_num+2):
+            start_idx = sym_idx * sym_len
+            end_idx = (sym_idx+1) * sym_len
 
-            waveBoth = wave[startIdx: endIdx]
-            waveOrig = waveBoth[cpLen//2: cpLen//2+fftSize]
-            constelPad = np.roll(np.fft.fft(waveOrig), shift=-fftSize//2)
-            constelBoth[symIdx, :] = constelPad[subOffset: subOffset+subNum]
+            wave_both = wave[start_idx: end_idx]
+            wave_orig = wave_both[cp_len//2: cp_len//2+fft_size]
+            constel_pad = np.roll(np.fft.fft(wave_orig), shift=-fft_size//2)
+            constel_both[sym_idx, :] = constel_pad[sub_offset: sub_offset+sub_num]
 
-        bitHead = self.bitHead
-        constelHeadGt = np.ones((subNum), dtype=complex) * np.nan
-        for subIdx in range(subNum):
-            constelHeadGt[subIdx] = self.__bit2constel__(
-                bitHead[subIdx, :], modu='QPSK')
-        constelHead_1 = constelBoth[0]
-        constelHead_2 = constelBoth[-1]
-        csi_1 = constelHead_1 / constelHeadGt
-        csi_2 = constelHead_2 / constelHeadGt
-        csiAmp = np.tile((csi_1 + csi_2) / 2, (symNum, 1))
+        bit_head = self.bit_head
+        constel_head_gt = np.ones((sub_num), dtype=complex) * np.nan
+        for sub_idx in range(sub_num):
+            constel_head_gt[sub_idx] = self._bit2constel(
+                bit_head[sub_idx, :], modu='QPSK')
+        constel_head_1 = constel_both[0]
+        constel_head_2 = constel_both[-1]
+        csi_1 = constel_head_1 / constel_head_gt
+        csi_2 = constel_head_2 / constel_head_gt
+        csi_amp = np.tile((csi_1 + csi_2) / 2, (sym_num, 1))
 
-        constelData = constelBoth[1: -1, :] / csiAmp
+        constel_data = constel_both[1: -1, :] / csi_amp
         if plot is not None:
             fig, ax = plt.subplots()
-            constelMap, speed = self.__GetConstelMap__(modu)
+            constel_map, speed = self._get_constel_map(modu)
             ax.scatter(
-                np.real(constelData.flatten()),
-                np.imag(constelData.flatten()), marker='o', s=10)
-            ax.scatter(np.real(constelMap), np.imag(
-                constelMap), marker='+', s=100)
+                np.real(constel_data.flatten()),
+                np.imag(constel_data.flatten()), marker='o', s=10)
+            ax.scatter(np.real(constel_map), np.imag(
+                constel_map), marker='+', s=100)
             fig.savefig(plot)
-            plt.close(fig)
-        subOffset = int(np.floor((fftSize - subNum) / 2))
-        bitData = np.ones((symNum, subNum, speed)) * np.nan
-        evmAll = []
-        for symIdx in range(symNum):
-            for subIdx in range(subNum):
-                bit, evm = self.__constel2bit__(
-                    constelData[symIdx, subIdx], modu=modu)
-                bitData[symIdx, subIdx] = bit
-                evmAll.append(evm)
-        evmAll = np.array(evmAll)
-        EVM = np.sqrt(np.mean(np.abs(evmAll) ** 2))
-        bitDataGt = self.bitData
-        BER = np.sum(np.logical_xor(bitData, bitDataGt)) / symNum/subNum/speed
+            # plt.close(fig)
+        sub_offset = int(np.floor((fft_size - sub_num) / 2))
+        bit_data = np.ones((sym_num, sub_num, speed)) * np.nan
+        evm_all = []
+        for sym_idx in range(sym_num):
+            for sub_idx in range(sub_num):
+                bit, evm = self._constel2bit(
+                    constel_data[sym_idx, sub_idx], modu=modu)
+                bit_data[sym_idx, sub_idx] = bit
+                evm_all.append(evm)
+        evm_all = np.array(evm_all)
+        evm = np.sqrt(np.mean(np.abs(evm_all) ** 2))
+        bit_data_gt = self.bit_data
+        ber = np.sum(np.logical_xor(bit_data, bit_data_gt)) / sym_num / sub_num / speed
 
-        return EVM, BER
+        return evm, ber
 
 
 if __name__ == "__main__":
     ofdm = OFDM()
-    wave = ofdm.Generate()
-    wave = wave + 0.05 * \
-        (np.random.randn((np.shape(wave)[0])) +
-         1j*np.random.randn((np.shape(wave)[0])))
-    EVM, BER = ofdm.Analyze(wave, plot='Constel.png')
-    print(EVM)
-    print(BER)
+    wave = ofdm.generate()
+    wave = wave + 0.05 * (np.random.randn((np.shape(wave)[0])) +
+                          1j * np.random.randn((np.shape(wave)[0])))
+    evm, ber = ofdm.analyze(wave, plot='constel.png')
+    print(f"EVM: {evm}")
+    print(f"BER: {ber}")
