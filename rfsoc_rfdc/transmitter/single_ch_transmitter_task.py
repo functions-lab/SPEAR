@@ -49,15 +49,9 @@ class SingleChTransmitterTask(OverlayTask):
         else:
             raise Exception(f"File {self.file_path} is not supported.")
 
-        # Generate binary sequence
-        # self.i_samples = WaveFormGenerator.generate_binary_seq(
-        #     repeat_time=1000, sample_pts=1000)
-        # self.q_samples = WaveFormGenerator.generate_no_wave(
-        #     repeat_time=1000, sample_pts=1000)
-
-        # Generate iq samples for a Zadoff-Chu sequence
-        # self.i_samples, self.q_samples = WaveFormGenerator.generate_zadoff_chu_wave(
-        #     repeat_time=1000, sample_pts=1000)
+        # Generate testing sequence
+        # ten_peaks = WaveFormGenerator.generate_ten_sine()
+        # self.i_samples, self.q_samples = ten_peaks, ten_peaks
 
     def run(self):
         # Perform data copy
