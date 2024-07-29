@@ -14,7 +14,7 @@ class Detection:
         # Check path to waveform
         file_dir = os.path.dirname(__file__)
         self.path2wave = os.path.join(
-            os.path.dirname(file_dir), "../../wave_files")
+            os.path.dirname(file_dir), "wave_files")
         if os.path.exists(self.path2wave):
             shutil.rmtree(self.path2wave)
         os.mkdir(self.path2wave)
