@@ -57,7 +57,7 @@ class WaveFormGenerator:
 
     @staticmethod
     def generate_ten_sine(scaling_factor=1.0):
-        ten_sine = self.generate_sine_wave(
+        ten_sine = WaveFormGenerator.generate_sine_wave(
             repeat_time=10, sample_pts=10, scaling_factor=scaling_factor)
         ten_sine = np.append(ten_sine, np.zeros(
             100, dtype=MyRFdcType.DATA_PATH_DTYPE))
