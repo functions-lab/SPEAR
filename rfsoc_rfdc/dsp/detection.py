@@ -17,7 +17,7 @@ class Detection:
             os.path.dirname(file_dir), "../wave_files")
         if os.path.exists(self.path2wave):
             shutil.rmtree(self.path2wave)
-        os.mkdir(self.path2wave, mode=777)
+        os.mkdir(self.path2wave)
         # Tx/Rx file name
         self.tx_file = os.path.join(self.path2wave, 'Tx.npy')
         self.rx_file = os.path.join(self.path2wave, 'Rx.npy')
@@ -200,7 +200,7 @@ if __name__ == "__main__":
                 modu='16QAM', cp_rate=0.25)
     packet_tx = ofdm.generate()
 
-    det = Detection(sample_rate=1.25e9)
+    det = Detection(sample_rate=2.5e9)
 
     wave_tx = det.proc_tx(packet_tx * det.base_band_gain)
 

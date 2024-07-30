@@ -57,7 +57,7 @@ class SingleChRxTask(OverlayTask):
                     channel_id=ch_idx,
                     dma_ip=self.dma_ip[ch_idx],
                     fifo_count_ip=self.fifo_count_ip[ch_idx],
-                    target_device=self.ol.ddr4_0,
+                    target_device=self.ol.ddr4_rx,
                     buff_size=self.packet_size * self.samples_per_axis_stream + buffer_margin,
                     debug_mode=False
                 )
