@@ -17,7 +17,7 @@ class Detection:
             os.path.dirname(file_dir), "../wave_files")
         if os.path.exists(self.path2wave):
             shutil.rmtree(self.path2wave)
-        os.mkdir(self.path2wave)
+        os.mkdir(self.path2wave, mode=777)
         # Tx/Rx file name
         self.tx_file = os.path.join(self.path2wave, 'Tx.npy')
         self.rx_file = os.path.join(self.path2wave, 'Rx.npy')
