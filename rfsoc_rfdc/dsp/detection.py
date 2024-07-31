@@ -24,6 +24,7 @@ class Detection:
         self.base_band_gain = 1
         self.sample_rate = sample_rate
         # DSP-related
+        self.max_detect_trials = 5
         self.zadoff_set = [139, 839]  # ascent
 
     def _check_saturation(self, packet, threshold=1):
@@ -118,7 +119,9 @@ class Detection:
         head_len = sum(self.zadoff_set) * 3
         wave_len = 2 * self.pad_len + head_len + self.packet_len
 
-        while True:
+        trial = self.max_detect_trials
+        while trial > 0:
+            trial = trial - 1
             wave_rx = wave_rx[-cap_num * wave_len:]
             offset_list, corr_list = self._zadoff_detection(
                 wave_rx[:wave_len], self.zadoff_set[-1], self.zadoff_set[-1], 0.7)
@@ -133,6 +136,10 @@ class Detection:
             if offset_zadoff <= 0:
                 continue
             break
+
+        if trial == -1:
+            raise Exception(
+                f"Failed to detect for more than {self.max_detect_trials} times")
 
         cfo_set = []
         offset = offset_zadoff
@@ -187,7 +194,7 @@ class Detection:
 
 
 WIFI_OFDM_SCHEME = OFDM(sym_num=100, fft_size=64, sub_num=48,
-                        modu='1024QAM', cp_rate=0.25)
+                        modu=ZCU216_CONFIG['QAM'], cp_rate=0.25)
 
 iq_samp_rate = ZCU216_CONFIG['DACSampleRate'] / \
     ZCU216_CONFIG['DACInterpolationRate'] * 1e6

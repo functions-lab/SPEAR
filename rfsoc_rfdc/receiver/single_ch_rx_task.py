@@ -127,7 +127,11 @@ class SingleChRxTask(OverlayTask):
                 # Run DSP pipeline
                 config_name = ZCU216_CONFIG['CONFIG_NAME']
                 wave_rx = np.load(DETECTION_SCHEME.rx_file)
-                packet_rx, snr, cfo = DETECTION_SCHEME.proc_rx(wave_rx)
+                try:
+                    packet_rx, snr, cfo = DETECTION_SCHEME.proc_rx(wave_rx)
+                except Exception:
+                    logging.error(f"Fail to detect Rx packet")
+                    continue
                 evm, ber = WIFI_OFDM_SCHEME.analyze(
                     packet_rx, plot=DETECTION_SCHEME.path2wave+'/'+config_name+"_const_diagram.png")
                 logging.info(
@@ -135,5 +139,6 @@ class SingleChRxTask(OverlayTask):
                 # Write result to a file
                 with open(DETECTION_SCHEME.path2wave+'/'+config_name+"_res.log", 'w') as f:
                     f.write(f"{snr:.3f}, {cfo:.3f}, {evm:.3f}, {ber:.3f}")
+
             else:
                 time.sleep(1)
