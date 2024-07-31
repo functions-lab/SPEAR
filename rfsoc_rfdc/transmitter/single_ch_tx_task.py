@@ -34,7 +34,7 @@ class SingleChTxTask(OverlayTask):
                     channel_id=ch_idx,
                     dma_ip=self.dma_ip[ch_idx],
                     fifo_count_ip=self.fifo_count_ip[ch_idx],
-                    target_device=self.ol.ddr4_0,
+                    target_device=self.ol.ddr4_tx,
                     debug_mode=False
                 )
             )
