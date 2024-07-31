@@ -21,7 +21,7 @@ class Detection:
         self.tx_file = os.path.join(self.path2wave, 'Tx.npy')
         self.rx_file = os.path.join(self.path2wave, 'Rx.npy')
 
-        self.base_band_gain = 5
+        self.base_band_gain = 1
         self.sample_rate = sample_rate
         # DSP-related
         self.zadoff_set = [139, 839]  # ascent
@@ -187,7 +187,7 @@ class Detection:
 
 
 WIFI_OFDM_SCHEME = OFDM(sym_num=100, fft_size=64, sub_num=48,
-                        modu='16QAM', cp_rate=0.25)
+                        modu='1024QAM', cp_rate=0.25)
 
 iq_samp_rate = ZCU216_CONFIG['DACSampleRate'] / \
     ZCU216_CONFIG['DACInterpolationRate'] * 1e6
