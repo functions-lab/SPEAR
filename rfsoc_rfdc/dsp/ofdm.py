@@ -37,27 +37,33 @@ class OFDM:
             bin_array.extend([0] * (bin_len - len(bin_array)))
         return np.array(bin_array)
 
+    def _grey_code(self, bit):
+        if bit == 1:
+            grey = np.array([0, 1])
+        else:
+            greyLow = self._grey_code(bit=bit-1)
+            grey_1 = greyLow
+            grey_2 = np.flip(greyLow) + 2 ** (bit-1)
+            grey = np.concatenate((grey_1, grey_2))
+        return grey
+
     def _get_constel_map(self, modu):
         """Generates constellation map for given modulation."""
-        grey = np.array([
-            0, 1, 3, 2, 6, 7, 5, 4,
-            12, 13, 15, 14, 10, 11, 9, 8,
-            24, 25, 27, 26, 30, 31, 29, 28,
-            20, 21, 23, 22, 18, 19, 17, 16])
-
-        grey_len = {
-            'QPSK': 2, '16QAM': 4, '64QAM': 8, '256QAM': 16, '1024QAM': 32
-        }.get(modu)
-
-        constel_map = np.ones((grey_len * grey_len), dtype=complex) * np.nan
-        for i in range(grey_len):
-            for j in range(grey_len):
-                constel_map[grey[i] * grey_len + grey[j]] = np.complex(i, j)
-        constel_map = (constel_map - np.mean(constel_map)) * 2
-        constel_map_norm = constel_map / \
-            np.sqrt(np.mean(np.abs(constel_map)**2))
-        speed = int(2 * np.log2(grey_len))
-        return constel_map_norm, speed
+        if modu == 'QPSK':
+            level = 1
+        elif 'QAM' in modu:
+            num = int(modu[:-3])
+            level = int(np.log2(num)/2)
+        greyLen = 2 ** level
+        grey = self._grey_code(bit=level)
+        constelMap = np.ones((greyLen*greyLen), dtype=complex) * np.nan
+        for i in range(greyLen):
+            for j in range(greyLen):
+                constelMap[grey[i]*greyLen+grey[j]] = np.complex(i, j)
+        constelMap = (constelMap - np.mean(constelMap)) * 2
+        constelMapNorm = constelMap / np.sqrt(np.mean(np.abs(constelMap)**2))
+        speed = 2 * level
+        return constelMapNorm, speed
 
     def _bit2constel(self, bit, constel_map):
         """Converts bit sequence to constellation point."""
