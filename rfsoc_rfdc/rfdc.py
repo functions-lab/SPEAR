@@ -204,10 +204,6 @@ class MyRFdc:
         self.clock_src = self.rfdc_cfg.freq_cfg.clock_src
         self.debug_mode = debug_mode
 
-    def __del__(self):
-        """Shutdown RF data converters safely."""
-        self.shutdown_tiles()
-
     def debug(self):
         # Attributes for both DAC and ADC blocks
         block_attr = ['BlockStatus', 'MixerSettings', 'QMCSettings',
