@@ -269,9 +269,11 @@ class MyRFdc:
     def shutdown_tiles(self):
         """Safely shutdown all tiles."""
         for tile in self.dac_tiles:
-            tile.Shutdown()
+            if self.rfdc_status.get_dac_tile_enb(tile.tile_id):
+                tile.ShutDown()
         for tile in self.adc_tiles:
-            tile.Shutdown()
+            if self.rfdc_status.get_adc_tile_enb(tile.tile_id):
+                tile.ShutDown()
         logging.info(f"All tiles has been safely shutdown!")
 
     def is_dac_tile_ready(self, tile):
