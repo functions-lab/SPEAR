@@ -15,14 +15,12 @@ class Detection:
         file_dir = os.path.dirname(__file__)
         self.path2wave = os.path.join(
             os.path.dirname(file_dir), "../wave_files")
-        if os.path.exists(self.path2wave):
-            shutil.rmtree(self.path2wave)
-        os.mkdir(self.path2wave)
+        if not os.path.exists(self.path2wave):
+            os.mkdir(self.path2wave)
         # Tx/Rx file name
         self.tx_file = os.path.join(self.path2wave, 'Tx.npy')
         self.rx_file = os.path.join(self.path2wave, 'Rx.npy')
-        # Preamble detection
-        self.detection_file = os.path.join(self.path2wave, 'detection.png')
+
         self.base_band_gain = 5
         self.sample_rate = sample_rate
         # DSP-related
@@ -179,7 +177,10 @@ class Detection:
         ax.vlines(offset_packet + self.packet_len, ymin=-1e10, ymax=+1e10)
         ax.set_ylim(bottom=0, top=100)
         ax.set_title(f'SNR: {snr:.2f}dB CFO:{cfo:.2f}Hz')
-        fig.savefig(self.detection_file)
+
+        detection_file = os.path.join(
+            self.path2wave, ZCU216_CONFIG['CONFIG_NAME']+'_detection.png')
+        fig.savefig(detection_file)
         plt.close()
 
         return packet_rx, snr, cfo

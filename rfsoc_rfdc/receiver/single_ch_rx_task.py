@@ -125,10 +125,11 @@ class SingleChRxTask(OverlayTask):
                 # IQ sample handler
                 self.sample_handler(iq_data)
                 # Run DSP pipeline
+                config_name = ZCU216_CONFIG['CONFIG_NAME']
                 wave_rx = np.load(DETECTION_SCHEME.rx_file)
                 packet_rx, snr, cfo = DETECTION_SCHEME.proc_rx(wave_rx)
                 evm, ber = WIFI_OFDM_SCHEME.analyze(
-                    packet_rx, plot=DETECTION_SCHEME.path2wave+"/const_diagram.png")
+                    packet_rx, plot=DETECTION_SCHEME.path2wave+'/'+config_name+"_const_diagram.png")
                 logging.info(f"SNR: {snr}, CFO: {cfo}, EVM: {evm}, BER: {ber}")
             else:
                 time.sleep(1)
