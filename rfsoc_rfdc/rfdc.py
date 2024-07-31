@@ -162,6 +162,7 @@ class MyRFdcConfig:
             'InterpolationFactor': self.freq_cfg.dac_interp_rate,
             'NyquistZone': 1,
             'UpdateEvent': xrfdc.EVENT_MIXER,
+            'InvSincFIR': ZCU216_CONFIG['InvSincFIR'],
         }
         self.dac_block_mixer_cfg = {
             'CoarseMixFreq': xrfdc.COARSE_MIX_BYPASS,
@@ -319,6 +320,7 @@ class MyRFdc:
             block.UpdateEvent(self.rfdc_cfg.dac_block_cfg['UpdateEvent'])
             block.QMCSettings = {'EnablePhase': 0, 'EnableGain': 0, 'GainCorrectionFactor': 0.0,
                                  'PhaseCorrectionFactor': 0.0, 'OffsetCorrectionFactor': 0, 'EventSource': xrfdc.EVNT_SRC_IMMEDIATE}
+            block.InvSincFIR = self.rfdc_cfg.dac_block_cfg['InvSincFIR']
             logging.info(
                 f"DAC tile {tile.tile_id} DAC block {block_id} is enabled!")
         else:

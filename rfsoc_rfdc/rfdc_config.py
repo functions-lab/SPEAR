@@ -47,6 +47,7 @@ ZCU216_DEFAULT_CONFIG = {
     "DACSampleRate": 2000.0,
     "DACInterpolationRate": 2,
     "DACNCO": 0,
+    "InvSincFIR": 1,  # 0: Disable, 1: 1st Nyquist, 2: 2nd Nyquist
     "ADCSampleRate": 2000.0,
     "ADCInterpolationRate": 2,
     "ADCNCO": -0
