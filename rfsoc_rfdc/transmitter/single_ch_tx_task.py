@@ -14,7 +14,7 @@ from rfsoc_rfdc.dsp.detection import WIFI_OFDM_SCHEME, DETECTION_SCHEME
 class SingleChTxTask(OverlayTask):
     """Single-Channel DAC"""
 
-    def __init__(self, overlay):
+    def __init__(self, overlay, tx_file=None):
         super().__init__(overlay, name="SingleChTxTask")
         # Hardware IPs
         self.dma_ip = [
@@ -39,11 +39,13 @@ class SingleChTxTask(OverlayTask):
                 )
             )
 
-        # Tx waveform
-        packet_tx = WIFI_OFDM_SCHEME.generate()
-        wave_tx = DETECTION_SCHEME.proc_tx(packet_tx)
-        np.save(DETECTION_SCHEME.tx_file, wave_tx)
-        self.path_to_tx_file = DETECTION_SCHEME.tx_file
+        if tx_file is None:
+            packet_tx = WIFI_OFDM_SCHEME.generate()
+            wave_tx = DETECTION_SCHEME.proc_tx(packet_tx)
+            np.save(DETECTION_SCHEME.tx_file, wave_tx)
+            self.path_to_tx_file = DETECTION_SCHEME.tx_file
+        else:
+            self.path_to_tx_file = tx_file
 
         # Load IQ samples from a .npy or .mat file
         if self.path_to_tx_file.endswith('.npy'):
