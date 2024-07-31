@@ -1,6 +1,7 @@
 # Waveform files
+*.png
+*.log
 *.npy
-*.mat
 
 # projects in hw_design
 */*/*/*/*_proj/
