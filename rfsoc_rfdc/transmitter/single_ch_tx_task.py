@@ -41,7 +41,8 @@ class SingleChTxTask(OverlayTask):
 
         if tx_file is None:
             packet_tx = WIFI_OFDM_SCHEME.generate()
-            wave_tx = DETECTION_SCHEME.proc_tx(packet_tx)
+            wave_tx = DETECTION_SCHEME.proc_tx(
+                packet_tx * DETECTION_SCHEME.base_band_gain)
             np.save(DETECTION_SCHEME.tx_file, wave_tx)
             self.path_to_tx_file = DETECTION_SCHEME.tx_file
         else:
