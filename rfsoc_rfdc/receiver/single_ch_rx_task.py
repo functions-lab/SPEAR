@@ -130,6 +130,10 @@ class SingleChRxTask(OverlayTask):
                 packet_rx, snr, cfo = DETECTION_SCHEME.proc_rx(wave_rx)
                 evm, ber = WIFI_OFDM_SCHEME.analyze(
                     packet_rx, plot=DETECTION_SCHEME.path2wave+'/'+config_name+"_const_diagram.png")
-                logging.info(f"SNR: {snr}, CFO: {cfo}, EVM: {evm}, BER: {ber}")
+                logging.info(
+                    f"SNR: {snr:.3f}, CFO: {cfo:.3f}, EVM: {evm:.3f}, BER: {ber:.3f}")
+                # Write result to a file
+                with open(DETECTION_SCHEME.path2wave+'/'+config_name+"_res.log", 'w') as f:
+                    f.write(f"{snr:.3f}, {cfo:.3f}, {evm:.3f}, {ber:.3f}")
             else:
                 time.sleep(1)
