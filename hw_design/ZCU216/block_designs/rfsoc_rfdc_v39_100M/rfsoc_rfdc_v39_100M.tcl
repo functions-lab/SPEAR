@@ -1,6 +1,6 @@
 
 ################################################################
-# This is a generated script based on design: rfsoc_rfdc_v39
+# This is a generated script based on design: rfsoc_rfdc_v39_100M
 #
 # Though there are limitations about the generated script,
 # the main purpose of this utility is to make learning
@@ -35,7 +35,7 @@ if { [string first $scripts_vivado_version $current_vivado_version] == -1 } {
 ################################################################
 
 # To test this script, run the following commands from Vivado Tcl console:
-# source rfsoc_rfdc_v39_script.tcl
+# source rfsoc_rfdc_v39_100M_script.tcl
 
 # If there is no project opened, this script will create a
 # project, but make sure you do not have an existing project
@@ -50,7 +50,7 @@ if { $list_projs eq "" } {
 
 # CHANGE DESIGN NAME HERE
 variable design_name
-set design_name rfsoc_rfdc_v39
+set design_name rfsoc_rfdc_v39_100M
 
 # If you do not already have an existing IP Integrator design open,
 # you can create a design using the following command:
@@ -111,9 +111,8 @@ if { ${design_name} eq "" } {
 }
 
   # Add USER_COMMENTS on $design_name
-  set_property USER_COMMENTS.comment_1 "v39_debug changelog
-- 1 DAC @ 2.5 GSPS 2X + 1 ADC @ 2.5 GSPS 2X
-- Tx uses PS DRAM while Rx uses PL DRAM" [get_bd_designs $design_name]
+  set_property USER_COMMENTS.comment_1 "v39_100M changelog
+- 1 DAC @ 4.0 GSPS 40X + 1 ADC @ 2.0 GSPS 20X" [get_bd_designs $design_name]
 
 common::send_gid_msg -ssname BD::TCL -id 2005 -severity "INFO" "Currently the variable <design_name> is equal to \"$design_name\"."
 
@@ -130,11 +129,11 @@ set bCheckIPs 1
 if { $bCheckIPs == 1 } {
    set list_check_ips "\ 
 xilinx.com:ip:proc_sys_reset:5.0\
+xilinx.com:ip:clk_wiz:6.0\
 xilinx.com:ip:axi_gpio:2.0\
 xilinx.com:ip:smartconnect:1.0\
 xilinx.com:ip:ddr4:2.2\
 xilinx.com:ip:util_vector_logic:2.0\
-xilinx.com:ip:clk_wiz:6.0\
 xilinx.com:ip:usp_rf_data_converter:2.5\
 xilinx.com:ip:zynq_ultra_ps_e:3.3\
 xilinx.com:ip:axis_register_slice:1.1\
@@ -518,8 +517,8 @@ proc create_hier_cell_dac_datapath { parentCell nameHier } {
 
   # Create port connections
   connect_bd_net -net aresetn_1 [get_bd_pins dac_aresetn] [get_bd_pins axis_register_slice_0/aresetn] [get_bd_pins t230/dac_aresetn]
+  connect_bd_net -net m_axi_mm2s_aclk1_1 [get_bd_pins ps_dram_clk] [get_bd_pins axi_interconnect_0/M00_ACLK] [get_bd_pins t230/ps_dram_clk]
   connect_bd_net -net ps_dram_aresetn_1 [get_bd_pins ps_dram_aresetn] [get_bd_pins axi_interconnect_0/M00_ARESETN] [get_bd_pins t230/ps_dram_aresetn]
-  connect_bd_net -net ps_dram_clk_1 [get_bd_pins ps_dram_clk] [get_bd_pins axi_interconnect_0/M00_ACLK] [get_bd_pins t230/ps_dram_clk]
   connect_bd_net -net rst_ps8_99M_peripheral_aresetn [get_bd_pins pl_aresetn] [get_bd_pins axi_interconnect_0/ARESETN] [get_bd_pins axi_interconnect_0/M01_ARESETN] [get_bd_pins axi_interconnect_0/S00_ARESETN] [get_bd_pins t230/pl_aresetn]
   connect_bd_net -net usp_rf_data_converter_clk_dac2 [get_bd_pins dac_aclk] [get_bd_pins axis_register_slice_0/aclk] [get_bd_pins t230/dac_aclk]
   connect_bd_net -net zynq_ultra_ps_e_pl_clk0 [get_bd_pins pl_aclk] [get_bd_pins axi_interconnect_0/ACLK] [get_bd_pins axi_interconnect_0/M01_ACLK] [get_bd_pins axi_interconnect_0/S00_ACLK] [get_bd_pins t230/pl_aclk]
@@ -757,6 +756,34 @@ proc create_root_design { parentCell } {
   # Create instance: adc_clk_aresetn, and set properties
   set adc_clk_aresetn [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 adc_clk_aresetn ]
 
+  # Create instance: adc_clk_conv, and set properties
+  set adc_clk_conv [ create_bd_cell -type ip -vlnv xilinx.com:ip:clk_wiz:6.0 adc_clk_conv ]
+  set_property -dict [ list \
+   CONFIG.AUTO_PRIMITIVE {MMCM} \
+   CONFIG.CLKOUT1_DRIVES {Buffer} \
+   CONFIG.CLKOUT1_JITTER {233.909} \
+   CONFIG.CLKOUT1_PHASE_ERROR {181.604} \
+   CONFIG.CLKOUT1_REQUESTED_OUT_FREQ {25.0} \
+   CONFIG.CLKOUT2_DRIVES {Buffer} \
+   CONFIG.CLKOUT3_DRIVES {Buffer} \
+   CONFIG.CLKOUT4_DRIVES {Buffer} \
+   CONFIG.CLKOUT5_DRIVES {Buffer} \
+   CONFIG.CLKOUT6_DRIVES {Buffer} \
+   CONFIG.CLKOUT7_DRIVES {Buffer} \
+   CONFIG.FEEDBACK_SOURCE {FDBK_AUTO} \
+   CONFIG.MMCM_BANDWIDTH {OPTIMIZED} \
+   CONFIG.MMCM_CLKFBOUT_MULT_F {38.500} \
+   CONFIG.MMCM_CLKOUT0_DIVIDE_F {48.125} \
+   CONFIG.MMCM_COMPENSATION {AUTO} \
+   CONFIG.MMCM_DIVCLK_DIVIDE {1} \
+   CONFIG.OPTIMIZE_CLOCKING_STRUCTURE_EN {true} \
+   CONFIG.PRIMITIVE {Auto} \
+   CONFIG.SECONDARY_SOURCE {Single_ended_clock_capable_pin} \
+   CONFIG.USE_LOCKED {false} \
+   CONFIG.USE_PHASE_ALIGNMENT {true} \
+   CONFIG.USE_RESET {false} \
+ ] $adc_clk_conv
+
   # Create instance: adc_datapath
   create_hier_cell_adc_datapath [current_bd_instance .] adc_datapath
 
@@ -782,6 +809,34 @@ proc create_root_design { parentCell } {
 
   # Create instance: dac_clk_aresetn, and set properties
   set dac_clk_aresetn [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 dac_clk_aresetn ]
+
+  # Create instance: dac_clk_conv, and set properties
+  set dac_clk_conv [ create_bd_cell -type ip -vlnv xilinx.com:ip:clk_wiz:6.0 dac_clk_conv ]
+  set_property -dict [ list \
+   CONFIG.AUTO_PRIMITIVE {MMCM} \
+   CONFIG.CLKOUT1_DRIVES {Buffer} \
+   CONFIG.CLKOUT1_JITTER {233.909} \
+   CONFIG.CLKOUT1_PHASE_ERROR {181.604} \
+   CONFIG.CLKOUT1_REQUESTED_OUT_FREQ {25.0} \
+   CONFIG.CLKOUT2_DRIVES {Buffer} \
+   CONFIG.CLKOUT3_DRIVES {Buffer} \
+   CONFIG.CLKOUT4_DRIVES {Buffer} \
+   CONFIG.CLKOUT5_DRIVES {Buffer} \
+   CONFIG.CLKOUT6_DRIVES {Buffer} \
+   CONFIG.CLKOUT7_DRIVES {Buffer} \
+   CONFIG.FEEDBACK_SOURCE {FDBK_AUTO} \
+   CONFIG.MMCM_BANDWIDTH {OPTIMIZED} \
+   CONFIG.MMCM_CLKFBOUT_MULT_F {38.500} \
+   CONFIG.MMCM_CLKOUT0_DIVIDE_F {48.125} \
+   CONFIG.MMCM_COMPENSATION {AUTO} \
+   CONFIG.MMCM_DIVCLK_DIVIDE {1} \
+   CONFIG.OPTIMIZE_CLOCKING_STRUCTURE_EN {true} \
+   CONFIG.PRIMITIVE {Auto} \
+   CONFIG.SECONDARY_SOURCE {Single_ended_clock_capable_pin} \
+   CONFIG.USE_LOCKED {false} \
+   CONFIG.USE_PHASE_ALIGNMENT {true} \
+   CONFIG.USE_RESET {false} \
+ ] $dac_clk_conv
 
   # Create instance: dac_datapath
   create_hier_cell_dac_datapath [current_bd_instance .] dac_datapath
@@ -815,10 +870,6 @@ proc create_root_design { parentCell } {
 
   # Create instance: ps_dram_aresetn, and set properties
   set ps_dram_aresetn [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 ps_dram_aresetn ]
-  set_property -dict [ list \
-   CONFIG.RESET_BOARD_INTERFACE {Custom} \
-   CONFIG.USE_BOARD_FLOW {true} \
- ] $ps_dram_aresetn
 
   # Create instance: ps_dram_clk, and set properties
   set ps_dram_clk [ create_bd_cell -type ip -vlnv xilinx.com:ip:clk_wiz:6.0 ps_dram_clk ]
@@ -842,7 +893,9 @@ proc create_root_design { parentCell } {
    CONFIG.MMCM_DIVCLK_DIVIDE {1} \
    CONFIG.OPTIMIZE_CLOCKING_STRUCTURE_EN {true} \
    CONFIG.PRIMITIVE {Auto} \
+   CONFIG.SECONDARY_SOURCE {Single_ended_clock_capable_pin} \
    CONFIG.USE_LOCKED {false} \
+   CONFIG.USE_PHASE_ALIGNMENT {false} \
    CONFIG.USE_RESET {false} \
  ] $ps_dram_clk
 
@@ -866,21 +919,21 @@ proc create_root_design { parentCell } {
    CONFIG.ADC1_Clock_Dist {1} \
    CONFIG.ADC1_Clock_Source {1} \
    CONFIG.ADC1_Enable {1} \
-   CONFIG.ADC1_Fabric_Freq {312.500} \
-   CONFIG.ADC1_Outclk_Freq {312.500} \
+   CONFIG.ADC1_Fabric_Freq {25.000} \
+   CONFIG.ADC1_Outclk_Freq {31.250} \
    CONFIG.ADC1_PLL_Enable {true} \
    CONFIG.ADC1_Refclk_Div {1} \
    CONFIG.ADC1_Refclk_Freq {500.000} \
-   CONFIG.ADC1_Sampling_Rate {2.5} \
+   CONFIG.ADC1_Sampling_Rate {2.0} \
    CONFIG.ADC2_Clock_Dist {0} \
    CONFIG.ADC2_Clock_Source {1} \
    CONFIG.ADC2_Enable {1} \
-   CONFIG.ADC2_Fabric_Freq {312.500} \
-   CONFIG.ADC2_Outclk_Freq {312.500} \
+   CONFIG.ADC2_Fabric_Freq {25.000} \
+   CONFIG.ADC2_Outclk_Freq {31.250} \
    CONFIG.ADC2_PLL_Enable {true} \
    CONFIG.ADC2_Refclk_Div {1} \
    CONFIG.ADC2_Refclk_Freq {500.000} \
-   CONFIG.ADC2_Sampling_Rate {2.5} \
+   CONFIG.ADC2_Sampling_Rate {2.0} \
    CONFIG.ADC3_Clock_Source {3} \
    CONFIG.ADC3_Enable {0} \
    CONFIG.ADC3_Fabric_Freq {0.0} \
@@ -923,9 +976,9 @@ proc create_root_design { parentCell } {
    CONFIG.ADC_Data_Width33 {8} \
    CONFIG.ADC_Decimation_Mode00 {0} \
    CONFIG.ADC_Decimation_Mode02 {0} \
-   CONFIG.ADC_Decimation_Mode10 {2} \
+   CONFIG.ADC_Decimation_Mode10 {20} \
    CONFIG.ADC_Decimation_Mode12 {0} \
-   CONFIG.ADC_Decimation_Mode20 {2} \
+   CONFIG.ADC_Decimation_Mode20 {20} \
    CONFIG.ADC_Decimation_Mode21 {0} \
    CONFIG.ADC_Decimation_Mode22 {0} \
    CONFIG.ADC_Decimation_Mode23 {0} \
@@ -1004,22 +1057,22 @@ proc create_root_design { parentCell } {
    CONFIG.DAC0_Sampling_Rate {6.4} \
    CONFIG.DAC1_Clock_Dist {1} \
    CONFIG.DAC1_Enable {1} \
-   CONFIG.DAC1_Fabric_Freq {312.500} \
+   CONFIG.DAC1_Fabric_Freq {25.000} \
    CONFIG.DAC1_Link_Coupling {0} \
-   CONFIG.DAC1_Outclk_Freq {312.500} \
+   CONFIG.DAC1_Outclk_Freq {31.250} \
    CONFIG.DAC1_PLL_Enable {true} \
    CONFIG.DAC1_Refclk_Div {1} \
    CONFIG.DAC1_Refclk_Freq {500.000} \
-   CONFIG.DAC1_Sampling_Rate {2.5} \
+   CONFIG.DAC1_Sampling_Rate {4.0} \
    CONFIG.DAC1_VOP {20.0} \
    CONFIG.DAC2_Clock_Dist {0} \
    CONFIG.DAC2_Clock_Source {5} \
    CONFIG.DAC2_Enable {1} \
-   CONFIG.DAC2_Fabric_Freq {312.500} \
-   CONFIG.DAC2_Outclk_Freq {312.500} \
+   CONFIG.DAC2_Fabric_Freq {25.000} \
+   CONFIG.DAC2_Outclk_Freq {31.250} \
    CONFIG.DAC2_PLL_Enable {true} \
    CONFIG.DAC2_Refclk_Freq {500.000} \
-   CONFIG.DAC2_Sampling_Rate {2.5} \
+   CONFIG.DAC2_Sampling_Rate {4.0} \
    CONFIG.DAC2_VOP {20.0} \
    CONFIG.DAC3_Clock_Source {7} \
    CONFIG.DAC3_Enable {0} \
@@ -1056,11 +1109,11 @@ proc create_root_design { parentCell } {
    CONFIG.DAC_Data_Width32 {16} \
    CONFIG.DAC_Data_Width33 {16} \
    CONFIG.DAC_Interpolation_Mode00 {0} \
-   CONFIG.DAC_Interpolation_Mode10 {2} \
+   CONFIG.DAC_Interpolation_Mode10 {40} \
    CONFIG.DAC_Interpolation_Mode11 {0} \
    CONFIG.DAC_Interpolation_Mode12 {0} \
    CONFIG.DAC_Interpolation_Mode13 {0} \
-   CONFIG.DAC_Interpolation_Mode20 {2} \
+   CONFIG.DAC_Interpolation_Mode20 {40} \
    CONFIG.DAC_Interpolation_Mode21 {0} \
    CONFIG.DAC_Interpolation_Mode22 {0} \
    CONFIG.DAC_Interpolation_Mode23 {0} \
@@ -2723,16 +2776,18 @@ Port;FD4A0000;FD4AFFFF;1|FPD;DPDMA;FD4C0000;FD4CFFFF;1|FPD;DDR_XMPU5_CFG;FD05000
   connect_bd_intf_net -intf_net zynq_ultra_ps_e_M_AXI_HPM0_LPD [get_bd_intf_pins axi_interconnect_pl/S00_AXI] [get_bd_intf_pins zynq_ultra_ps_e/M_AXI_HPM0_LPD]
 
   # Create port connections
-  connect_bd_net -net Net [get_bd_pins dac_datapath/ps_dram_clk] [get_bd_pins ps_dram_aresetn/slowest_sync_clk] [get_bd_pins ps_dram_clk/clk_out1] [get_bd_pins zynq_ultra_ps_e/saxihp0_fpd_aclk]
   connect_bd_net -net adc_aresetn_1 [get_bd_pins adc_clk_aresetn/peripheral_aresetn] [get_bd_pins adc_datapath/adc_aresetn] [get_bd_pins usp_rf_data_converter/m1_axis_aresetn] [get_bd_pins usp_rf_data_converter/m2_axis_aresetn]
-  connect_bd_net -net adc_clk_convt_clk_out1 [get_bd_pins adc_clk_aresetn/slowest_sync_clk] [get_bd_pins adc_datapath/adc_aclk] [get_bd_pins usp_rf_data_converter/clk_adc1] [get_bd_pins usp_rf_data_converter/m1_axis_aclk] [get_bd_pins usp_rf_data_converter/m2_axis_aclk]
-  connect_bd_net -net clk_convt_dac_clk_out1 [get_bd_pins dac_clk_aresetn/slowest_sync_clk] [get_bd_pins dac_datapath/dac_aclk] [get_bd_pins usp_rf_data_converter/clk_dac1] [get_bd_pins usp_rf_data_converter/s1_axis_aclk] [get_bd_pins usp_rf_data_converter/s2_axis_aclk]
+  connect_bd_net -net adc_clk_convt_clk_out1 [get_bd_pins adc_clk_aresetn/slowest_sync_clk] [get_bd_pins adc_clk_conv/clk_out1] [get_bd_pins adc_datapath/adc_aclk] [get_bd_pins usp_rf_data_converter/m1_axis_aclk] [get_bd_pins usp_rf_data_converter/m2_axis_aclk]
+  connect_bd_net -net clk_convt_dac_clk_out1 [get_bd_pins dac_clk_aresetn/slowest_sync_clk] [get_bd_pins dac_clk_conv/clk_out1] [get_bd_pins dac_datapath/dac_aclk] [get_bd_pins usp_rf_data_converter/s1_axis_aclk] [get_bd_pins usp_rf_data_converter/s2_axis_aclk]
   connect_bd_net -net dac_clk_aresetn_peripheral_aresetn [get_bd_pins dac_clk_aresetn/peripheral_aresetn] [get_bd_pins dac_datapath/dac_aresetn] [get_bd_pins usp_rf_data_converter/s1_axis_aresetn] [get_bd_pins usp_rf_data_converter/s2_axis_aresetn]
   connect_bd_net -net ddr4_0_c0_ddr4_ui_clk [get_bd_pins adc_datapath/pl_dram_clk] [get_bd_pins ddr4_rx/c0_ddr4_ui_clk] [get_bd_pins pl_dram_mux_rx/aclk] [get_bd_pins rx_pl_dram_300M_aresetn/slowest_sync_clk] [get_bd_pins zynq_ultra_ps_e/maxihpm0_fpd_aclk]
   connect_bd_net -net ddr4_0_c0_ddr4_ui_clk_sync_rst [get_bd_pins ddr4_rx/c0_ddr4_ui_clk_sync_rst] [get_bd_pins rx_pl_dram_300M_aresetn/ext_reset_in]
   connect_bd_net -net pl_dram_aresetn_peripheral_aresetn [get_bd_pins adc_datapath/pl_dram_aresetn] [get_bd_pins ddr4_rx/c0_ddr4_aresetn] [get_bd_pins pl_dram_mux_rx/aresetn] [get_bd_pins rx_pl_dram_300M_aresetn/peripheral_aresetn]
+  connect_bd_net -net ps_dram_aresetn_peripheral_aresetn [get_bd_pins dac_datapath/ps_dram_aresetn] [get_bd_pins ps_dram_aresetn/peripheral_aresetn]
+  connect_bd_net -net ps_dram_clk_clk_out1 [get_bd_pins dac_datapath/ps_dram_clk] [get_bd_pins ps_dram_aresetn/slowest_sync_clk] [get_bd_pins ps_dram_clk/clk_out1] [get_bd_pins zynq_ultra_ps_e/saxihp0_fpd_aclk]
   connect_bd_net -net rst_ps8_99M_peripheral_aresetn [get_bd_pins adc_datapath/pl_aresetn] [get_bd_pins axi_gpio_led/s_axi_aresetn] [get_bd_pins axi_interconnect_pl/aresetn] [get_bd_pins dac_datapath/pl_aresetn] [get_bd_pins proc_sys_reset_pl/peripheral_aresetn] [get_bd_pins usp_rf_data_converter/s_axi_aresetn]
-  connect_bd_net -net tx_pl_dram_300M_aresetn_peripheral_aresetn [get_bd_pins dac_datapath/ps_dram_aresetn] [get_bd_pins ps_dram_aresetn/peripheral_aresetn]
+  connect_bd_net -net usp_rf_data_converter_clk_adc1 [get_bd_pins adc_clk_conv/clk_in1] [get_bd_pins usp_rf_data_converter/clk_adc1]
+  connect_bd_net -net usp_rf_data_converter_clk_dac1 [get_bd_pins dac_clk_conv/clk_in1] [get_bd_pins usp_rf_data_converter/clk_dac1]
   connect_bd_net -net util_vector_logic_0_Res [get_bd_pins ddr4_rx/sys_rst] [get_bd_pins not_for_ddr4_rx/Res]
   connect_bd_net -net zynq_ultra_ps_e_pl_clk1 [get_bd_pins adc_datapath/pl_clk] [get_bd_pins axi_gpio_led/s_axi_aclk] [get_bd_pins axi_interconnect_pl/aclk] [get_bd_pins dac_datapath/pl_aclk] [get_bd_pins proc_sys_reset_pl/slowest_sync_clk] [get_bd_pins ps_dram_clk/clk_in1] [get_bd_pins usp_rf_data_converter/s_axi_aclk] [get_bd_pins zynq_ultra_ps_e/maxihpm0_lpd_aclk] [get_bd_pins zynq_ultra_ps_e/pl_clk0]
   connect_bd_net -net zynq_ultra_ps_e_pl_resetn0 [get_bd_pins adc_clk_aresetn/ext_reset_in] [get_bd_pins dac_clk_aresetn/ext_reset_in] [get_bd_pins not_for_ddr4_rx/Op1] [get_bd_pins proc_sys_reset_pl/ext_reset_in] [get_bd_pins ps_dram_aresetn/ext_reset_in] [get_bd_pins zynq_ultra_ps_e/pl_resetn0]
