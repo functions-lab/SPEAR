@@ -13,8 +13,6 @@ import socket
 import time
 import threading
 
-from rfsoc_rfdc.dsp.detection import WIFI_OFDM_SCHEME, DETECTION_SCHEME
-
 
 class SingleChRxTask(OverlayTask):
     """Single-Channel ADC"""
@@ -37,6 +35,10 @@ class SingleChRxTask(OverlayTask):
         dac_samp_rate = ZCU216_CONFIG['DACSampleRate'] / \
             ZCU216_CONFIG['DACInterpolationRate'] * 1e6
         self.fft_plotter = FFTPlotter(sample_rate=dac_samp_rate)
+
+        # DSP related
+        self.ofdm_scheme = ZCU216_CONFIG['OFDM_SCHEME']
+        self.detect_scheme = ZCU216_CONFIG['DETECTION_SCHEME']
 
         # Hardware IPs
         self.dma_ip = [
@@ -102,7 +104,7 @@ class SingleChRxTask(OverlayTask):
             target=self.fft_plotter.update_plot, args=(iq_data,))
         # Save IQ samples to file thd
         log_thd = threading.Thread(
-            target=self.data_logging_handler, args=(iq_data, DETECTION_SCHEME.rx_file))
+            target=self.data_logging_handler, args=(iq_data, self.detect_scheme.rx_file))
         # TCP real/imag samples thd
         tcp_thd = threading.Thread(target=self.tcp_handler, args=(iq_data,))
 
@@ -126,18 +128,19 @@ class SingleChRxTask(OverlayTask):
                 self.sample_handler(iq_data)
                 # Run DSP pipeline
                 config_name = ZCU216_CONFIG['CONFIG_NAME']
-                wave_rx = np.load(DETECTION_SCHEME.rx_file)
+
+                wave_rx = np.load(self.detect_scheme.rx_file)
                 try:
-                    packet_rx, snr, cfo = DETECTION_SCHEME.proc_rx(wave_rx)
+                    packet_rx, snr, cfo = self.detect_scheme.proc_rx(wave_rx)
                 except Exception:
                     logging.error(f"Fail to detect Rx packet")
                     continue
-                evm, ber = WIFI_OFDM_SCHEME.analyze(
-                    packet_rx, plot=DETECTION_SCHEME.path2wave+'/'+config_name+"_const_diagram.png")
+                evm, ber = self.ofdm_scheme.analyze(
+                    packet_rx, plot=self.detect_scheme.path2wave+'/'+config_name+"_const_diagram.png")
                 logging.info(
                     f"SNR: {snr:.3f}, CFO: {cfo:.3f}, EVM: {evm:.3f}, BER: {ber:.3f}")
                 # Write result to a file
-                with open(DETECTION_SCHEME.path2wave+'/'+config_name+"_res.log", 'w') as f:
+                with open(self.detect_scheme.path2wave+'/'+config_name+"_res.log", 'w') as f:
                     f.write(f"{snr:.3f}, {cfo:.3f}, {evm:.3f}, {ber:.3f}")
 
             else:

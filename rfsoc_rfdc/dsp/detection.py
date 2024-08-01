@@ -193,14 +193,6 @@ class Detection:
         return packet_rx, snr, cfo
 
 
-WIFI_OFDM_SCHEME = OFDM(sym_num=100, fft_size=64, sub_num=48,
-                        modu=ZCU216_CONFIG['QAM'], cp_rate=0.25)
-
-iq_samp_rate = ZCU216_CONFIG['DACSampleRate'] / \
-    ZCU216_CONFIG['DACInterpolationRate'] * 1e6
-
-DETECTION_SCHEME = Detection(sample_rate=iq_samp_rate)
-
 if __name__ == "__main__":
     np.random.seed(0)
 

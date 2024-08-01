@@ -8,7 +8,6 @@ from rfsoc_rfdc.rfdc import MyRFdcType
 from rfsoc_rfdc.iq_loader import MatlabIqLoader, NumpyIqLoader
 
 from rfsoc_rfdc.rfdc_config import ZCU216_CONFIG
-from rfsoc_rfdc.dsp.detection import WIFI_OFDM_SCHEME, DETECTION_SCHEME
 
 
 class SingleChTxTask(OverlayTask):
@@ -40,11 +39,13 @@ class SingleChTxTask(OverlayTask):
             )
 
         if tx_file is None:
-            packet_tx = WIFI_OFDM_SCHEME.generate()
-            wave_tx = DETECTION_SCHEME.proc_tx(
-                packet_tx * DETECTION_SCHEME.base_band_gain)
-            np.save(DETECTION_SCHEME.tx_file, wave_tx)
-            self.path_to_tx_file = DETECTION_SCHEME.tx_file
+            ofdm_scheme = ZCU216_CONFIG['OFDM_SCHEME']
+            detect_scheme = ZCU216_CONFIG['DETECTION_SCHEME']
+            packet_tx = ofdm_scheme.generate()
+            wave_tx = detect_scheme.proc_tx(
+                packet_tx * detect_scheme.base_band_gain)
+            np.save(detect_scheme.tx_file, wave_tx)
+            self.path_to_tx_file = detect_scheme.tx_file
         else:
             self.path_to_tx_file = tx_file
 
