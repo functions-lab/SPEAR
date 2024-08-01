@@ -17,7 +17,7 @@ import threading
 class SingleChRxTask(OverlayTask):
     """Single-Channel ADC"""
 
-    def __init__(self, overlay, samples_per_axis_stream=8, fifo_size=32768):
+    def __init__(self, overlay, buff_size=2**18):
         super().__init__(overlay, name="SingleChRxTask")
         # TCP socket
         self.server_config = ("server.local", 1234)
@@ -27,9 +27,7 @@ class SingleChRxTask(OverlayTask):
             socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # Make sure the socket is reusable
 
         # Receiver datapath parameters
-        self.fifo_size = fifo_size
-        self.samples_per_axis_stream = samples_per_axis_stream
-        self.packet_size = int(32768)
+        self.buff_size = buff_size
         # Initialize plotters
         self.complex_plotter = ComplexSignalPlotter()
         dac_samp_rate = ZCU216_CONFIG['DACSampleRate'] / \
@@ -53,14 +51,13 @@ class SingleChRxTask(OverlayTask):
         self.rx_channels = []
 
         for ch_idx, _ in enumerate(self.dma_ip):
-            buffer_margin = 50  # Magic number! Necessary
             self.rx_channels.append(
                 RxChannelReal2Iq(
                     channel_id=ch_idx,
                     dma_ip=self.dma_ip[ch_idx],
                     fifo_count_ip=self.fifo_count_ip[ch_idx],
                     target_device=self.ol.ddr4_rx,
-                    buff_size=self.packet_size * self.samples_per_axis_stream + buffer_margin,
+                    buff_size=self.buff_size,
                     debug_mode=False
                 )
             )
