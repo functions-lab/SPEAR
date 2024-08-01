@@ -97,7 +97,7 @@ class Detection:
         self._check_saturation(packet_tx)
         self.packet_len = np.shape(packet_tx)[0]
         # int(max(1e-3*self.sample_rate, round(0.1*self.packet_len)))
-        self.pad_len = 10000
+        self.pad_len = 1000
 
         head_tx = np.zeros((sum(self.zadoff_set) * 3), dtype=np.complex64)
         offset = 0
