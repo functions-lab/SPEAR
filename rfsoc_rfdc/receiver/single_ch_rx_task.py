@@ -138,7 +138,7 @@ class SingleChRxTask(OverlayTask):
                     f"SNR: {snr:.3f}, CFO: {cfo:.3f}, EVM: {evm:.3f}, BER: {ber:.10f}")
                 # Write result to a file
                 with open(self.detect_scheme.path2wave+'/'+config_name+"_res.log", 'w') as f:
-                    f.write(f"{snr:.3f}, {cfo:.3f}, {evm:.3f}, {ber:.3f}")
+                    f.write(f"{snr:.3f}, {cfo:.3f}, {evm:.3f}, {ber:.10f}")
 
             else:
                 time.sleep(1)
