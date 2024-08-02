@@ -41,7 +41,8 @@ class SingleChTxTask(OverlayTask):
         if tx_file is None:
             ofdm_scheme = ZCU216_CONFIG['OFDM_SCHEME']
             detect_scheme = ZCU216_CONFIG['DETECTION_SCHEME']
-            packet_tx = ofdm_scheme.generate()
+            ofdm_atten = ZCU216_CONFIG['OFDM_ATTEN_DB']
+            packet_tx = ofdm_scheme.generate(amp=0.5/(10**(ofdm_atten/20)))
             wave_tx = detect_scheme.proc_tx(
                 packet_tx * detect_scheme.base_band_gain)
             np.save(detect_scheme.tx_file, wave_tx)

@@ -61,6 +61,7 @@ GLOBAL_VAR = {
 
 EXP_CONFIG = {
     "QAM": "16QAM",
+    "OFDM_ATTEN_DB" : 0,
     "UsrpNameIfAny": "X310_322A005",
     "UsrpRx": "RFA_RX2",
     "ExternalAtten": 0.0,
