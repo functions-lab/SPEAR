@@ -39,6 +39,7 @@ class SingleChTxTask(OverlayTask):
             )
 
         if tx_file is None:
+            np.random.seed(0)  # Fix random seed
             ofdm_scheme = ZCU216_CONFIG['OFDM_SCHEME']
             detect_scheme = ZCU216_CONFIG['DETECTION_SCHEME']
             ofdm_atten = ZCU216_CONFIG['OFDM_ATTEN_DB']
