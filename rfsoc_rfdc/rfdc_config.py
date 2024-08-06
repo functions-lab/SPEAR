@@ -47,6 +47,7 @@ ZCU216_DEFAULT_CONFIG = {
     "DACSampleRate": 2000.0,
     "DACInterpolationRate": 2,
     "DACNCO": 0,
+    "InvSincFIR": 1,  # 0: Disable, 1: 1st Nyquist, 2: 2nd Nyquist
     "ADCSampleRate": 2000.0,
     "ADCInterpolationRate": 2,
     "ADCNCO": -0
@@ -58,5 +59,19 @@ GLOBAL_VAR = {
     "CONFIG_NAME": "default_config"
 }
 
+EXP_CONFIG = {
+    "QAM": "16QAM",
+    "OFDM_ATTEN_DB": 0,
+    "UsrpNameIfAny": "X310_322A005",
+    "UsrpRx": "RFA_RX2",
+    "ExternalAtten": 0.0,
+    "UseSplitter": False,
+    "SplitterType": "1-to-2",
+    "BalunMode": "BALH0006",
+    "BalunMin": 0.2,
+    "MalunMax": 60,
+}
+
 ZCU216_CONFIG = merge_dict(ZCU216_MIN_MAX_CONFIG, ZCU216_DEFAULT_CONFIG)
 ZCU216_CONFIG = merge_dict(ZCU216_CONFIG, GLOBAL_VAR)
+ZCU216_CONFIG = merge_dict(ZCU216_CONFIG, EXP_CONFIG)

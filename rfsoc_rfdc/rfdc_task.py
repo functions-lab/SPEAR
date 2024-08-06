@@ -15,10 +15,13 @@ class RfdcTask(OverlayTask):
 
     def run(self):
         """Run the task."""
-        # Configure external PLL clocks
-        set_custom_lmclks()
-        # Configure RF data converters
-        self.rfdc.init_setup()
+        if not self.rfdc.is_ready():
+            # Configure external PLL clocks
+            set_custom_lmclks()
+            # Initialize RF data converters
+            self.rfdc.init()
+        # Config DAC/ADC to target GSPS & Interp/Decim Factor
+        self.rfdc.setup()
 
 
 class RfdcMultiBandTask(RfdcTask):

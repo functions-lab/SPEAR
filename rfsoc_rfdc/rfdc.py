@@ -162,6 +162,7 @@ class MyRFdcConfig:
             'InterpolationFactor': self.freq_cfg.dac_interp_rate,
             'NyquistZone': 1,
             'UpdateEvent': xrfdc.EVENT_MIXER,
+            'InvSincFIR': ZCU216_CONFIG['InvSincFIR'],
         }
         self.dac_block_mixer_cfg = {
             'CoarseMixFreq': xrfdc.COARSE_MIX_BYPASS,
@@ -203,10 +204,6 @@ class MyRFdc:
         self.clock_src = self.rfdc_cfg.freq_cfg.clock_src
         self.debug_mode = debug_mode
 
-    def __del__(self):
-        """Shutdown RF data converters safely."""
-        self.shutdown_tiles()
-
     def debug(self):
         # Attributes for both DAC and ADC blocks
         block_attr = ['BlockStatus', 'MixerSettings', 'QMCSettings',
@@ -237,28 +234,50 @@ class MyRFdc:
                         for attr in adc_only_attr:
                             logging.info(attr+": "+str(getattr(block, attr)))
 
-    def init_setup(self):
-        """Power on DAC/ADC tiles and configure DAC/ADC blocks"""
+    def init(self):
+        """Power on DAC/ADC tiles"""
         # Power on DAC tiles
         for tile in self.dac_tiles:
             self.power_on_dac_tile(tile)
-        # Configure DAC blocks within each tile
-        for tile in self.dac_tiles:
-            self.config_dac_blocks(tile)
         # Power on ADC tiles
         for tile in self.adc_tiles:
             self.power_on_adc_tile(tile)
+
+    def setup(self):
+        """Configure DAC/ADC blocks"""
+        # Configure DAC blocks within each tile
+        for tile in self.dac_tiles:
+            self.config_dac_blocks(tile)
         # Configure ADC blocks within each tile
         for tile in self.adc_tiles:
             self.config_adc_blocks(tile)
 
+    def is_ready(self):
+        """Check if all tiles are powered up"""
+        for tile in self.dac_tiles:
+            if not self.is_dac_tile_ready(tile):
+                return False
+        for tile in self.adc_tiles:
+            if not self.is_adc_tile_ready(tile):
+                return False
+        return True
+
     def shutdown_tiles(self):
         """Safely shutdown all tiles."""
         for tile in self.dac_tiles:
-            tile.Shutdown()
+            if self.rfdc_status.get_dac_tile_enb(tile.tile_id):
+                tile.ShutDown()
         for tile in self.adc_tiles:
-            tile.Shutdown()
+            if self.rfdc_status.get_adc_tile_enb(tile.tile_id):
+                tile.ShutDown()
         logging.info(f"All tiles has been safely shutdown!")
+
+    def is_dac_tile_ready(self, tile):
+        tile_state = self.rfdc_status.get_dac_tile_state(tile.tile_id)
+        if self.rfdc_status.get_dac_tile_enb(tile.tile_id):
+            return False if tile_state < 15 else True
+        else:
+            return True
 
     def power_on_dac_tile(self, tile):
         """Power on DAC tiles."""
@@ -278,6 +297,13 @@ class MyRFdc:
                 raise Exception(err_msg)
             logging.info(
                 f"DAC tile {tile.tile_id} ({tile.tile_phy_id}) is fully powered up!")
+
+    def is_adc_tile_ready(self, tile):
+        tile_state = self.rfdc_status.get_adc_tile_state(tile.tile_id)
+        if self.rfdc_status.get_adc_tile_enb(tile.tile_id):
+            return False if tile_state < 15 else True
+        else:
+            return True
 
     def power_on_adc_tile(self, tile):
         """Power on ADC tiles."""
@@ -319,6 +345,7 @@ class MyRFdc:
             block.UpdateEvent(self.rfdc_cfg.dac_block_cfg['UpdateEvent'])
             block.QMCSettings = {'EnablePhase': 0, 'EnableGain': 0, 'GainCorrectionFactor': 0.0,
                                  'PhaseCorrectionFactor': 0.0, 'OffsetCorrectionFactor': 0, 'EventSource': xrfdc.EVNT_SRC_IMMEDIATE}
+            block.InvSincFIR = self.rfdc_cfg.dac_block_cfg['InvSincFIR']
             logging.info(
                 f"DAC tile {tile.tile_id} DAC block {block_id} is enabled!")
         else:

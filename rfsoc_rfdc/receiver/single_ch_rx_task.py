@@ -13,13 +13,11 @@ import socket
 import time
 import threading
 
-from rfsoc_rfdc.dsp.detection import WIFI_OFDM_SCHEME, DETECTION_SCHEME
-
 
 class SingleChRxTask(OverlayTask):
     """Single-Channel ADC"""
 
-    def __init__(self, overlay, samples_per_axis_stream=8, fifo_size=32768):
+    def __init__(self, overlay, buff_size=2**18):
         super().__init__(overlay, name="SingleChRxTask")
         # TCP socket
         self.server_config = ("server.local", 1234)
@@ -29,14 +27,16 @@ class SingleChRxTask(OverlayTask):
             socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # Make sure the socket is reusable
 
         # Receiver datapath parameters
-        self.fifo_size = fifo_size
-        self.samples_per_axis_stream = samples_per_axis_stream
-        self.packet_size = int(32768)
+        self.buff_size = buff_size
         # Initialize plotters
         self.complex_plotter = ComplexSignalPlotter()
         dac_samp_rate = ZCU216_CONFIG['DACSampleRate'] / \
             ZCU216_CONFIG['DACInterpolationRate'] * 1e6
         self.fft_plotter = FFTPlotter(sample_rate=dac_samp_rate)
+
+        # DSP related
+        self.ofdm_scheme = ZCU216_CONFIG['OFDM_SCHEME']
+        self.detect_scheme = ZCU216_CONFIG['DETECTION_SCHEME']
 
         # Hardware IPs
         self.dma_ip = [
@@ -51,14 +51,13 @@ class SingleChRxTask(OverlayTask):
         self.rx_channels = []
 
         for ch_idx, _ in enumerate(self.dma_ip):
-            buffer_margin = 50  # Magic number! Necessary
             self.rx_channels.append(
                 RxChannelReal2Iq(
                     channel_id=ch_idx,
                     dma_ip=self.dma_ip[ch_idx],
                     fifo_count_ip=self.fifo_count_ip[ch_idx],
                     target_device=self.ol.ddr4_rx,
-                    buff_size=self.packet_size * self.samples_per_axis_stream + buffer_margin,
+                    buff_size=self.buff_size,
                     debug_mode=False
                 )
             )
@@ -102,7 +101,7 @@ class SingleChRxTask(OverlayTask):
             target=self.fft_plotter.update_plot, args=(iq_data,))
         # Save IQ samples to file thd
         log_thd = threading.Thread(
-            target=self.data_logging_handler, args=(iq_data, DETECTION_SCHEME.rx_file))
+            target=self.data_logging_handler, args=(iq_data, self.detect_scheme.rx_file))
         # TCP real/imag samples thd
         tcp_thd = threading.Thread(target=self.tcp_handler, args=(iq_data,))
 
@@ -126,14 +125,20 @@ class SingleChRxTask(OverlayTask):
                 self.sample_handler(iq_data)
                 # Run DSP pipeline
                 config_name = ZCU216_CONFIG['CONFIG_NAME']
-                wave_rx = np.load(DETECTION_SCHEME.rx_file)
-                packet_rx, snr, cfo = DETECTION_SCHEME.proc_rx(wave_rx)
-                evm, ber = WIFI_OFDM_SCHEME.analyze(
-                    packet_rx, plot=DETECTION_SCHEME.path2wave+'/'+config_name+"_const_diagram.png")
+
+                wave_rx = np.load(self.detect_scheme.rx_file)
+                try:
+                    packet_rx, snr, cfo = self.detect_scheme.proc_rx(wave_rx)
+                except Exception:
+                    logging.error(f"Fail to detect Rx packet")
+                    continue
+                evm, ber = self.ofdm_scheme.analyze(
+                    packet_rx, plot=self.detect_scheme.path2wave+'/'+config_name+"_const_diagram.png")
                 logging.info(
-                    f"SNR: {snr:.3f}, CFO: {cfo:.3f}, EVM: {evm:.3f}, BER: {ber:.3f}")
+                    f"SNR: {snr:.3f}, CFO: {cfo:.3f}, EVM: {evm:.3f}, BER: {ber:.10f}")
                 # Write result to a file
-                with open(DETECTION_SCHEME.path2wave+'/'+config_name+"_res.log", 'w') as f:
-                    f.write(f"{snr:.3f}, {cfo:.3f}, {evm:.3f}, {ber:.3f}")
+                with open(self.detect_scheme.path2wave+'/'+config_name+"_res.log", 'w') as f:
+                    f.write(f"{snr:.3f}, {cfo:.3f}, {evm:.3f}, {ber:.10f}")
+
             else:
                 time.sleep(1)
