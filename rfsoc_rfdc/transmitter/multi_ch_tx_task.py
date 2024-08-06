@@ -5,13 +5,13 @@ import numpy as np
 import time
 
 from rfsoc_rfdc.rfdc import MyRFdcType
-from rfsoc_rfdc.matlab_iq_loader import MatlabIqLoader
+from rfsoc_rfdc.iq_loader import MatlabIqLoader
 
 
-class MultiChTransmitterTask(OverlayTask):
+class MultiChTxTask(OverlayTask):
 
     def __init__(self, overlay, channel_count=4):
-        super().__init__(overlay, name="MultiChTransmitterTask")
+        super().__init__(overlay, name="MultiChTxTask")
         # Number of DACs controlled by a DMA
         self.channel_count = channel_count
         # Hardware IPs
