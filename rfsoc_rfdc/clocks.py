@@ -1,151 +1,129 @@
 import os
 import xrfclk
 import logging
+from abc import ABC, abstractmethod
 
 
-def _get_lmclk_devices():
-    """Populate LMK and LMX devices.
+class ExternalClkConfig(ABC):
+    def __init__(self, chip, freq_in, freq_out):
+        self.chip = chip
+        self.freq_in, self.freq_out = freq_in, freq_out
+        self.file = None
+        self.loc = None
+        self.reg = None
+
+    @abstractmethod
+    def find_matching_file(self, config_dir):
+        pass
+
+    def read_registers(self):
+        if not self.loc:
+            raise ValueError("File location not set")
+        with open(self.loc, 'r') as file:
+            reg = [line.rstrip("\n") for line in file]
+            self.reg = [int(r.split('\t')[-1], 16) for r in reg]
+
+    def program_clock(self):
+        if not self.reg:
+            raise ValueError("Registers not loaded")
+
+        if isinstance(self, LMK04828ClkConfig):
+            devices = xrfclk.lmk_devices
+            write_func = xrfclk.xrfclk._write_LMK_regs
+        elif isinstance(self, LMX2594ClkConfig):
+            devices = xrfclk.lmx_devices
+            write_func = xrfclk.xrfclk._write_LMX_regs
+        else:
+            raise ValueError("Unknown clock type")
+
+        for device in devices:
+            write_func(self.reg, device)
+
+    @abstractmethod
+    def to_dict(self):
+        pass
+
+
+class LMK04828ClkConfig(ExternalClkConfig):
+    def __init__(self, chip, freq_in, freq_out, mts_pl_clk_freq=0.0, mts_pl_sysref_freq=0.0):
+        super().__init__(chip, freq_in, freq_out)
+        self.mts_pl_clk_freq = mts_pl_clk_freq
+        self.mts_pl_sysref_freq = mts_pl_sysref_freq
+
+    def find_matching_file(self, config_dir):
+        expected_filename = f"{self.chip}_{self.freq_in}_{self.freq_out}_{self.mts_pl_clk_freq}_{self.mts_pl_sysref_freq}.txt"
+        for filename in os.listdir(config_dir):
+            if filename == expected_filename:
+                self.file = filename
+                self.loc = os.path.join(config_dir, filename)
+                return True
+        return False
+
+    def to_dict(self):
+        return {
+            'file': self.file,
+            'loc': self.loc,
+            'chip': self.chip,
+            'freq_in': self.freq_in,
+            'freq_out': self.freq_out,
+            'mts_pl_clk_freq': self.mts_pl_clk_freq,
+            'mts_pl_sysref_freq': self.mts_pl_sysref_freq,
+            'reg': self.reg
+        }
+
+
+class LMX2594ClkConfig(ExternalClkConfig):
+    def __init__(self, chip, freq_in, freq_out):
+        super().__init__(chip, freq_in, freq_out)
+
+    def find_matching_file(self, config_dir):
+        expected_filename = f"{self.chip}_{self.freq_in}_{self.freq_out}.txt"
+        for filename in os.listdir(config_dir):
+            if filename == expected_filename:
+                self.file = filename
+                self.loc = os.path.join(config_dir, filename)
+                return True
+        return False
+
+    def to_dict(self):
+        return {
+            'file': self.file,
+            'loc': self.loc,
+            'chip': self.chip,
+            'freq_in': self.freq_in,
+            'freq_out': self.freq_out,
+            'reg': self.reg
+        }
+
+
+def find_and_program_clocks(lmk_config, lmx_config, config_dir):
     """
+    Find matching configuration files and program the clocks.
 
-    # Search for devices if none exist
-    if xrfclk.lmk_devices == [] and xrfclk.lmx_devices == []:
+    :param lmk_config: LMK04828ClkConfig object
+    :param lmx_config: LMX2594ClkConfig object
+    :param config_dir: Directory containing clock configuration files
+    :return: Dictionary containing updated LMK and LMX configurations
+    """
+    # Ensure LMK and LMX devices are known
+    if not xrfclk.lmk_devices and not xrfclk.lmx_devices:
         xrfclk.xrfclk._find_devices()
 
+    # Find matching files
+    if not lmk_config.find_matching_file(config_dir):
+        raise FileNotFoundError(
+            "Could not find matching LMK configuration file.")
+    if not lmx_config.find_matching_file(config_dir):
+        raise FileNotFoundError(
+            "Could not find matching LMX configuration file.")
 
-def _get_custom_lmclks(loc):
-    """Search for LMK and LMX clock files with a given address.
-    """
+    # Read registers
+    lmk_config.read_registers()
+    lmx_config.read_registers()
 
-    # Check type and value
-    if not isinstance(loc, str):
-        raise TypeError('Address location must be a string.')
-    if not os.path.isdir(loc):
-        raise ValueError('Address location does not exist.')
+    # Program clocks
+    lmk_config.program_clock()
+    lmx_config.program_clock()
 
-    # Variables
-    lmk_loc = ''
-    lmx_loc = ''
-    lmclk_loc = ''
-
-    # Walk through directory and find .txt files
-    for root, dirs, files in os.walk(loc):
-        for d in dirs:
-            for lmk in xrfclk.lmk_devices:
-                if d == lmk['compatible']:
-                    lmclk_loc = os.path.join(root, d)
-                    break
-
-    # Check variable is empty
-    if lmclk_loc == '':
-        raise RuntimeError('Could not find lmclk files.')
-
-    # Use root directory to extract LMK and LMX locs
-    for file in os.listdir(lmclk_loc):
-        if file.endswith('.txt'):
-            if 'LMK' in file:
-                lmk_loc = os.path.join(lmclk_loc, file)
-            elif 'LMX' in file:
-                lmx_loc = os.path.join(lmclk_loc, file)
-
-    # Check variables are empty
-    if lmk_loc == '' or lmx_loc == '':
-        raise RuntimeError('Could not find lmclk files.')
-
-    return lmk_loc, lmx_loc
-
-
-def _get_custom_lmclk_props(lmk_loc, lmx_loc):
-    """Obtain the properties for LMK and LMX clocks using
-    a set of address locations for clock files.
-    """
-
-    # Check type, value, and file format
-    if not isinstance(lmk_loc, str) or not isinstance(lmx_loc, str):
-        raise TypeError('TICS files must be a string.')
-    if not os.path.isfile(lmk_loc) or not os.path.isfile(lmx_loc):
-        raise ValueError('TICS file paths do not exist.')
-    if not lmk_loc[-4:] == '.txt' or not lmx_loc[-4:] == '.txt':
-        raise ValueError('TICS files must be .txt files.')
-
-    # Strip file name from arguments
-    lmk_name = lmk_loc.split('/')[-1]
-    lmx_name = lmx_loc.split('/')[-1]
-
-    # Split file name into LMK and LMX chip and freq (strip .txt)
-    lmk_split = lmk_name.strip('.txt').split('_')
-    lmx_split = lmx_name.strip('.txt').split('_')
-
-    # Obtain LMK and LMX chip and freq components and
-    # check for errors in format
-    if len(lmk_split) == 2 and len(lmx_split) == 2:
-        lmk_chip, lmk_freq = lmk_split
-        lmx_chip, lmx_freq = lmx_split
-    else:
-        raise ValueError('TICS file names have incorrect format.')
-
-    # Open files and parse registers
-    with open(lmk_loc, 'r') as file:
-        reg = [line.rstrip("\n") for line in file]
-        lmk_reg = [int(r.split('\t')[-1], 16) for r in reg]
-    with open(lmx_loc, 'r') as file:
-        reg = [line.rstrip("\n") for line in file]
-        lmx_reg = [int(r.split('\t')[-1], 16) for r in reg]
-
-    # Populate TICS file dictionary
-    clk_props = {
-        'lmk': {
-            'file': lmk_name,
-            'loc': lmk_loc,
-            'chip': lmk_chip,
-            'freq': lmk_freq,
-            'reg': lmk_reg
-        },
-        'lmx': {
-            'file': lmx_name,
-            'loc': lmx_loc,
-            'chip': lmx_chip,
-            'freq': lmx_freq,
-            'reg': lmx_reg
-        }
-    }
-
-    return clk_props
-
-
-def _program_custom_lmclks(clk_props):
-    """Program the LMK and LMX clocks using clock properties.
-    """
-
-    # Program each device
-    for lmk in xrfclk.lmk_devices:
-        xrfclk.xrfclk._write_LMK_regs(clk_props['lmk']['reg'], lmk)
-    for lmx in xrfclk.lmx_devices:
-        xrfclk.xrfclk._write_LMX_regs(clk_props['lmx']['reg'], lmx)
-
-
-def set_custom_lmclks(lmk_loc=None, lmx_loc=None):
-    """Populate LMK and LMX clocks. Search for clock files.
-    Obtain the properties of the clock files. Program the
-    LMK and LMX clocks with the propertides of the files.
-    """
-
-    # Ensure LMK and LMX devices are known
-    _get_lmclk_devices()
-
-    if lmk_loc is None and lmx_loc is None:
-        # Get custom ref clock locs
-        cwd = os.path.dirname(os.path.realpath(__file__))
-        lmk_loc, lmx_loc = _get_custom_lmclks(cwd)
-
-    # Get custom ref clock props
-    clk_props = _get_custom_lmclk_props(lmk_loc, lmx_loc)
-
-    lmk_props, lmx_props = clk_props['lmk'], clk_props['lmx']
-
-    logging.info(
-        f"Configuring LMK chip using file {lmk_props['file']} at {lmk_props['freq']} MHz")
-    logging.info(
-        f"Configuring LMX chip using file {lmx_props['file']} at {lmx_props['freq']} MHz")
-
-    # Program custom ref clocks
-    _program_custom_lmclks(clk_props)
+    # Return configurations as a dictionary
+    return lmk_config.to_dict(), lmx_config.to_dict()

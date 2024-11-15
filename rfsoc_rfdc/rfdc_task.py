@@ -1,27 +1,56 @@
-from rfsoc_rfdc.clocks import set_custom_lmclks
+from rfsoc_rfdc.clocks import LMK04828ClkConfig, LMX2594ClkConfig, find_and_program_clocks
 from rfsoc_rfdc.overlay_task import OverlayTask
 from rfsoc_rfdc.rfdc import MyRFdc
 
+import os
+import logging
 from rfsoc_rfdc.rfdc_config import ZCU216_CONFIG
 
 
 class RfdcTask(OverlayTask):
     """Task for configuring RF data converters."""
 
-    def __init__(self, overlay):
+    def __init__(self, overlay, mts_enable=False, debug_mode=False):
         """Initialize the task with the given overlay."""
         super().__init__(overlay, name="RfdcTask")
-        self.rfdc = MyRFdc(overlay, debug_mode=True)
+        self.debug_mode = debug_mode
+        rfdc_ip = overlay.usp_rf_data_converter
+        self.my_rfdc = MyRFdc(rfdc_ip, debug_mode=debug_mode)
+
+    def set_external_clocks(self):
+        # LMK clock config
+        lmk_config = LMK04828ClkConfig(
+            chip="LMK04828", freq_in=10.0, freq_out=250.0, mts_pl_clk_freq=300.0, mts_pl_sysref_freq=10.0)
+        # LMX clock config
+        lmx_config = LMX2594ClkConfig(
+            chip="LMX2594", freq_in=250.0, freq_out=500.0)
+        # Locate clock config file directory
+        config_dir = os.getcwd()
+        for sub_dir in ["rfsoc_rfdc", "xrfclk", "ZCU216"]:
+            config_dir = os.path.join(config_dir, sub_dir)
+        # Program clocks
+        _lmk_prop, _lmx_prop = find_and_program_clocks(
+            lmk_config, lmx_config, config_dir)
+        # Debug clock properties
+        if self.debug_mode:
+            for prop in [_lmk_prop, _lmx_prop]:
+                logging.info(
+                    f"{prop['chip']} freq_in {prop['freq_in']} MHz freq_out {prop['freq_out']} MHz ")
+                try:
+                    logging.info(
+                        f"{prop['chip']} mts_pl_clk_freq {prop['mts_pl_clk_freq']} MHz mts_pl_sysref_freq {prop['mts_pl_sysref_freq']} MHz ")
+                except:
+                    pass
 
     def run(self):
         """Run the task."""
-        if not self.rfdc.is_ready():
+        if not self.my_rfdc.is_ready():
             # Configure external PLL clocks
-            set_custom_lmclks()
+            self.set_external_clocks()
             # Initialize RF data converters
-            self.rfdc.init()
-        # Config DAC/ADC to target GSPS & Interp/Decim Factor
-        self.rfdc.setup()
+            self.my_rfdc.init()
+        # Config DAC/ADC to target samping rate and interp/decim factor
+        self.my_rfdc.setup()
 
 
 class RfdcMultiBandTask(RfdcTask):

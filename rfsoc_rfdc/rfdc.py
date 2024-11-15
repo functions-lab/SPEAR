@@ -11,12 +11,11 @@ from rfsoc_rfdc.rfdc_config import ZCU216_CONFIG
 class MyRFdcStatus:
     """Status of RF Data Converter"""
 
-    def __init__(self, overlay):
-        self.rfdc = overlay.usp_rf_data_converter
-        self.dac_tile_status = self.rfdc.IPStatus['DACTileStatus']
-        self.adc_tile_status = self.rfdc.IPStatus['ADCTileStatus']
-        self.dac_clk_dist_status = self.rfdc.ClkDistribution['DAC']
-        self.adc_clk_dist_status = self.rfdc.ClkDistribution['ADC']
+    def __init__(self, rfdc):
+        self.dac_tile_status = rfdc.IPStatus['DACTileStatus']
+        self.adc_tile_status = rfdc.IPStatus['ADCTileStatus']
+        self.dac_clk_dist_status = rfdc.ClkDistribution['DAC']
+        self.adc_clk_dist_status = rfdc.ClkDistribution['ADC']
 
     def get_dac_tile_enb(self, tile_id):
         return self.dac_tile_status[tile_id]['IsEnabled']
@@ -193,9 +192,9 @@ class MyRFdcConfig:
 class MyRFdc:
     """My class for controlling the RF Data Converter."""
 
-    def __init__(self, overlay, debug_mode=False):
-        self.rfdc = overlay.usp_rf_data_converter
-        self.rfdc_status = MyRFdcStatus(overlay)
+    def __init__(self, rfdc_ip, debug_mode=False):
+        self.rfdc = rfdc_ip
+        self.rfdc_status = MyRFdcStatus(self.rfdc)
         self.rfdc_cfg = MyRFdcConfig()
         self.dac_tiles = [MyRFdcDACTile(
             tile_id, tile) for tile_id, tile in enumerate(self.rfdc.dac_tiles)]
